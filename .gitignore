@@ -50,3 +50,4 @@ Thumbs.db
 coverage.xml
 *.cover
 *.log
+.secret.key
