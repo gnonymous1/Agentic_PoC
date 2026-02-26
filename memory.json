@@ -79,5 +79,14 @@
     "type": "text",
     "timestamp": "2026-02-17T16:36:26.665799",
     "embedding": null
+  },
+  {
+    "content": "Test memory",
+    "meta": {
+      "source": "test_suite"
+    },
+    "type": "text",
+    "timestamp": "2026-02-26T09:34:50.031781",
+    "embedding": null
   }
 ]

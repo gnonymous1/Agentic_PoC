@@ -3,6 +3,8 @@
  * Provides UI functionality for Synthesis Plans, Memory Explorer, Metrics, and Code Evolution
  */
 
+const API_BASE = window.AGENTOS_CONFIG?.API_BASE || "http://localhost:8000";
+
 // ==================== SYNTHESIS PLAN VIEWER ====================
 
 class SynthesisPlanViewer {
@@ -13,7 +15,7 @@ class SynthesisPlanViewer {
 
     async loadActivePlans() {
         try {
-            const response = await fetch('/synthesis/plans');
+            const response = await fetch(API_BASE + '/synthesis/plans');
             const data = await response.json();
 
             if (data.active_plans && data.active_plans.length > 0) {
@@ -29,7 +31,7 @@ class SynthesisPlanViewer {
 
     async loadPlanStatus(planId) {
         try {
-            const response = await fetch(`/synthesis/plans/${planId}`);
+            const response = await fetch(`${API_BASE}/synthesis/plans/${planId}`);
             const data = await response.json();
             this.displayPlan(data);
         } catch (error) {
@@ -162,7 +164,7 @@ class SynthesisPlanViewer {
         if (!this.currentPlan || !this.currentPlan.plan_id) return;
 
         try {
-            await fetch(`/synthesis/plans/${this.currentPlan.plan_id}`, {
+            await fetch(`${API_BASE}/synthesis/plans/${this.currentPlan.plan_id}`, {
                 method: 'DELETE'
             });
             this.stopAutoUpdate();
@@ -199,7 +201,7 @@ class MemoryExplorer {
 
     async loadMemoryStats() {
         try {
-            const response = await fetch('/memory/stats');
+            const response = await fetch(API_BASE + '/memory/stats');
             const data = await response.json();
             this.displayMemoryLayers(data);
         } catch (error) {
@@ -279,7 +281,7 @@ class MemoryExplorer {
         this.activeLayer = layerName;
 
         try {
-            const response = await fetch(`/memory/layer/${layerName}`);
+            const response = await fetch(`${API_BASE}/memory/layer/${layerName}`);
             const data = await response.json();
 
             // Update timeline with layer-specific memories
@@ -314,8 +316,8 @@ class MetricsDashboard {
     async loadMetrics() {
         try {
             const [metricsRes, perfRes] = await Promise.all([
-                fetch('/metrics'),
-                fetch('/performance')
+                fetch(API_BASE + '/metrics'),
+                fetch(API_BASE + '/performance')
             ]);
 
             const metrics = await metricsRes.json();
@@ -401,7 +403,7 @@ class EvolutionHistory {
 
     async loadHistory() {
         try {
-            const response = await fetch('/evolution/history');
+            const response = await fetch(API_BASE + '/evolution/history');
             const data = await response.json();
             this.modifications = data.modifications || [];
             this.displayHistory();
@@ -477,7 +479,7 @@ class EvolutionHistory {
         }
 
         try {
-            await fetch(`/evolution/rollback/${modId}`, { method: 'POST' });
+            await fetch(`${API_BASE}/evolution/rollback/${modId}`, { method: 'POST' });
             this.loadHistory(); // Reload
         } catch (error) {
             console.error('Error rolling back:', error);
