@@ -668,7 +668,7 @@ Do not include markdown formatting (```json), just the raw JSON string.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/scripts/execute")
-async def execute_script(request: ScriptExecuteRequest):
+async def execute_script(request: ScriptRequest):
     """Execute a script."""
     try:
         result = await script_executor.execute_script(request.script_name)

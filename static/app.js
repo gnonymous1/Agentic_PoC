@@ -1,5 +1,5 @@
 // AgentOS Dashboard Logic
-const API_BASE = "http://localhost:8000";
+const API_BASE = window.AGENTOS_CONFIG?.API_BASE || "http://localhost:8000";
 
 // Theme Management
 function initTheme() {
@@ -36,8 +36,17 @@ let inputTimeoutId = null; // Track timeout for auto-re-enabling input
 // WebSocket Connection
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    const port = 8766; // WebChannel port
+    let host = window.location.hostname;
+    const port = window.AGENTOS_CONFIG?.WS_PORT || 8766; // WebChannel port
+
+    // Derive host from API_BASE if it is an absolute URL
+    if (API_BASE.startsWith('http')) {
+        try {
+            host = new URL(API_BASE).hostname;
+        } catch (e) {
+            console.warn("Could not derive WebSocket host from API_BASE");
+        }
+    }
 
     try {
         socket = new WebSocket(`${protocol}//${host}:${port}`);

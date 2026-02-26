@@ -4,6 +4,15 @@ Quick test to verify dashboard routes are working
 """
 
 import sys
+from unittest.mock import MagicMock
+
+# Mock GUI libraries for headless environment
+sys.modules['pyautogui'] = MagicMock()
+sys.modules['mouseinfo'] = MagicMock()
+sys.modules['pyscreeze'] = MagicMock()
+sys.modules['pygetwindow'] = MagicMock()
+sys.modules['winreg'] = MagicMock()
+
 sys.path.insert(0, '.')
 
 from fastapi.testclient import TestClient
