@@ -25,7 +25,7 @@
                     <div class="status-indicator online">ONLINE</div>
                 </div>
                 <!-- Theme Toggle -->
-                <button id="theme-toggle" class="btn-icon" onclick="toggleTheme()" title="Switch Theme">
+                <button id="theme-toggle" class="btn-icon" onclick="toggleTheme()" title="Switch Theme" aria-label="Switch Theme">
                     <span id="theme-icon">🌙</span>
                 </button>
             </div>
@@ -321,7 +321,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>New Mission</h2>
-                <span class="close-modal" onclick="closeTaskModal()">&times;</span>
+                <button class="close-modal" onclick="closeTaskModal()" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -359,7 +359,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="profile-name">Agent Name</h2>
-                <span class="close-modal" onclick="closeProfileModal()">&times;</span>
+                <button class="close-modal" onclick="closeProfileModal()" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="profile-header">
