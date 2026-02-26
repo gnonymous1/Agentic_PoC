@@ -47,6 +47,7 @@ from fastapi import Depends, status
 from sqlalchemy.orm import Session
 from database import get_db
 from sqlalchemy import text
+from database.models import User as DBUser
 
 # --- Pydantic Models ---
 class ChatRequest(BaseModel):
@@ -114,12 +115,12 @@ def setup_admin_user():
     db = SessionLocal()
     try:
         # Check if admin exists
-        admin = db.query(User).filter(User.username == "admin").first()
+        admin = db.query(DBUser).filter(DBUser.username == "admin").first()
         if not admin:
             logger.info("Creating default admin user...")
             # Create admin
             password_hash = auth_service.hash_password("admin123") # Change in production
-            new_admin = User(
+            new_admin = DBUser(
                 username="admin",
                 email="admin@agentos.local",
                 password_hash=password_hash,
@@ -578,11 +579,22 @@ class Workflow(BaseModel):
 
 # Phase 18: Workflow Engine
 @app.post("/workflows/save")
-async def save_workflow(workflow: Workflow):
+async def save_workflow(
+    workflow: Workflow,
+    current_user: User = Depends(get_current_active_user)
+):
     """Save a workflow definition to disk."""
     try:
         os.makedirs("workflows", exist_ok=True)
-        filename = f"workflows/{workflow.name.replace(' ', '_').lower()}.json"
+        # Sanitize filename
+        safe_name = os.path.basename(workflow.name)
+        # Further sanitization to prevent weird characters
+        safe_name = "".join(c for c in safe_name if c.isalnum() or c in (' ', '_', '-')).strip()
+        safe_name = safe_name.replace(' ', '_').lower()
+        if not safe_name:
+            safe_name = "untitled"
+
+        filename = f"workflows/{safe_name}.json"
         with open(filename, "w") as f:
             f.write(workflow.json())
         return {"status": "saved", "path": filename}
@@ -668,7 +680,7 @@ Do not include markdown formatting (```json), just the raw JSON string.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/scripts/execute")
-async def execute_script(request: ScriptExecuteRequest):
+async def execute_script(request: ScriptRequest):
     """Execute a script."""
     try:
         result = await script_executor.execute_script(request.script_name)
@@ -1218,5 +1230,5 @@ if __name__ == "__main__":
     print(f"API Docs: http://localhost:{port}/docs")
     print(f"{'='*60}\n")
     
-    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
 

@@ -1,15 +1,33 @@
-import pyautogui
-import pygetwindow as gw
+try:
+    import pyautogui
+    # Safety Defaults
+    pyautogui.FAILSAFE = True
+    pyautogui.PAUSE = 0.5
+except (ImportError, KeyError, OSError):
+    print("Warning: pyautogui could not be imported. Computer control tools will be disabled.")
+    pyautogui = None
+
+try:
+    import pygetwindow as gw
+except (ImportError, NotImplementedError):
+    print("Warning: pygetwindow could not be imported. Window management tools will be disabled.")
+    gw = None
+
 import time
 import os
 import subprocess
-import winreg
+
+try:
+    import winreg
+except ImportError:
+    # Mock winreg for non-Windows systems
+    class MockWinReg:
+        def __getattr__(self, name):
+            return None
+    winreg = MockWinReg()
+
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
-
-# Safety Defaults
-pyautogui.FAILSAFE = True
-pyautogui.PAUSE = 0.5
 
 def _safety_guard(action_name: str):
     """
@@ -35,6 +53,7 @@ def computer_screenshot(filename: Annotated[str, "Filename to save as (e.g. 'scr
     """
     Takes a screenshot, analyzes it with vision, and saves a text description to memory.
     """
+    if not pyautogui: return "Error: pyautogui not available"
     try:
         # Define path inside static folder for dashboard access
         static_dir = os.path.join("static", "screenshots")
@@ -87,6 +106,7 @@ def computer_screenshot(filename: Annotated[str, "Filename to save as (e.g. 'scr
 @tool
 def computer_list_windows() -> str:
     """Lists all visible window titles."""
+    if not gw: return "Error: pygetwindow not available"
     try:
         windows = gw.getAllTitles()
         # Filter empty strings
@@ -98,6 +118,7 @@ def computer_list_windows() -> str:
 @tool
 def computer_focus_window(title_substring: Annotated[str, "Part of the window title"]) -> str:
     """Brings a window to the front."""
+    if not gw: return "Error: pygetwindow not available"
     try:
         windows = gw.getWindowsWithTitle(title_substring)
         if windows:
@@ -115,6 +136,7 @@ def computer_focus_window(title_substring: Annotated[str, "Part of the window ti
 @tool
 def computer_mouse_move(x: int, y: int) -> str:
     """Moves the mouse to specific X,Y coordinates."""
+    if not pyautogui: return "Error: pyautogui not available"
     _safety_guard(f"move mouse to ({x}, {y})")
     try:
         pyautogui.moveTo(x, y, duration=0.5)
@@ -125,6 +147,7 @@ def computer_mouse_move(x: int, y: int) -> str:
 @tool
 def computer_mouse_click(x: Annotated[int, "X coordinate"], y: Annotated[int, "Y coordinate"], double_click: bool = False) -> str:
     """Moves mouse and clicks."""
+    if not pyautogui: return "Error: pyautogui not available"
     _safety_guard(f"click mouse at ({x}, {y})")
     try:
         pyautogui.moveTo(x, y, duration=0.5)
@@ -140,6 +163,7 @@ def computer_mouse_click(x: Annotated[int, "X coordinate"], y: Annotated[int, "Y
 @tool
 def computer_keyboard_type(text: str, press_enter: bool = False) -> str:
     """Types text at current cursor location."""
+    if not pyautogui: return "Error: pyautogui not available"
     _safety_guard(f"type text: '{text[:10]}...'")
     try:
         pyautogui.write(text, interval=0.05)
@@ -152,6 +176,7 @@ def computer_keyboard_type(text: str, press_enter: bool = False) -> str:
 @tool
 def computer_keyboard_hotkey(keys: Annotated[List[str], "List of keys (e.g. ['ctrl', 'c'])"]) -> str:
     """Presses a hotkey combination."""
+    if not pyautogui: return "Error: pyautogui not available"
     _safety_guard(f"press hotkey: {'+'.join(keys)}")
     try:
         pyautogui.hotkey(*keys)
@@ -210,6 +235,9 @@ def system_shell_exec(command: str, use_powershell: bool = True) -> str:
     _safety_guard(f"execute shell command: {command}")
     try:
         shell = "powershell" if use_powershell else "cmd"
+        # On Linux, fallback to bash if powershell/cmd not found?
+        # But this code is seemingly Windows specific.
+        # We'll just try to run it.
         result = subprocess.run([shell, "-Command" if use_powershell else "/c", command], capture_output=True, text=True, timeout=30)
         output = result.stdout if result.returncode == 0 else result.stderr
         return f"Exited with code {result.returncode}. Output:\n{output}"
