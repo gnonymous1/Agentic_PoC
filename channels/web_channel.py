@@ -341,7 +341,7 @@ class WebChannel(Channel):
             "source": data["source"]
         }
         
-        await self.broadcast(json.dumps(msg))  # Using broadcast wrapper might double-encode, fixing below
+        await self.broadcast_event(msg)
 
     async def broadcast_event(self, event_data: Dict[str, Any]):
         """Direct broadcast helper"""
