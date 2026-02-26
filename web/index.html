@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNIOS v4.0 | Self-Evolving Agentic OS</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@300;600;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="glass-bg"></div>
+
+    <div class="app-container">
+        <!-- Sidebar for Metrics & Status -->
+        <aside class="sidebar glass">
+            <div class="logo">
+                <h1>OMNIOS <span>v4.0</span></h1>
+            </div>
+
+            <nav class="side-nav">
+                <button class="nav-item active" data-tab="chat">💬 Reasoning Chat</button>
+                <button class="nav-item" data-tab="workflows">⛓️ Workflows</button>
+                <button class="nav-item" data-tab="skills">🧩 Skills Repository</button>
+                <button class="nav-item" data-tab="agents">🤖 Agent Fabric</button>
+            </nav>
+
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="label">System Status</span>
+                    <span class="value pulse">Online</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Service Tier</span>
+                    <span class="value" id="current-tier">Pro</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">Observability</span>
+                    <span class="value">Active</span>
+                </div>
+            </div>
+
+            <nav class="metrics-nav">
+                <h3>Live Observability</h3>
+                <div class="metric-card">
+                    <span class="m-label">Token Usage</span>
+                    <div class="m-bar-bg">
+                        <div class="m-bar" style="width: 45%;"></div>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <span class="m-label">Resilience Loops</span>
+                    <span class="m-value">3 Active</span>
+                </div>
+                <div class="metric-card">
+                    <span class="m-label">Evolution Progress</span>
+                    <span class="m-value">12/12 Phases</span>
+                </div>
+            </nav>
+
+            <div class="device-info">
+                <span>Active Device: Desktop-Web</span>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <!-- Chat Panel -->
+            <section id="chat-panel" class="tab-panel active">
+                <header class="chat-header glass">
+                    <div class="header-info">
+                        <h2>Coordinator Interface</h2>
+                        <p>Advanced Reasoning & Meta-Learning Mode</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="lightning-btn" class="btn-icon">⚡</button>
+                        <button id="settings-btn" class="btn-icon">⚙️</button>
+                    </div>
+                </header>
+
+                <div id="message-container" class="messages">
+                    <div class="message ai glass">
+                        <div class="msg-content">
+                            Hello! I am OMNIOS v4.0. My evolution roadmap is complete. How can I assist you today?
+                        </div>
+                        <div class="msg-meta">Now • Evolution Engine</div>
+                    </div>
+                </div>
+
+                <footer class="chat-input-container glass">
+                    <div class="input-wrapper">
+                        <textarea id="user-input" placeholder="Type a message or issue a command..."></textarea>
+                        <button id="send-btn" class="send-btn">Process →</button>
+                    </div>
+                    <div class="input-meta">
+                        Shift + Enter for new line. Sensitive actions will trigger a Human-Approval gate.
+                    </div>
+                </footer>
+            </section>
+
+            <!-- Workflows Panel -->
+            <section id="workflows-panel" class="tab-panel hidden">
+                <header class="panel-header glass">
+                    <h2>Automated Workflows</h2>
+                    <p>Pre-defined agentic sequences for complex tasks</p>
+                </header>
+                <div class="grid-container" id="workflow-list">
+                    <div class="grid-card glass">
+                        <h3>Security Audit</h3>
+                        <p>Full scan of the codebase for vulnerabilities.</p>
+                        <button class="btn-small">Execute</button>
+                    </div>
+                    <div class="grid-card glass">
+                        <h3>Performance Benchmarking</h3>
+                        <p>Run stress tests and latency analysis.</p>
+                        <button class="btn-small">Execute</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Panel -->
+            <section id="skills-panel" class="tab-panel hidden">
+                <header class="panel-header glass">
+                    <h2>Skills Repository</h2>
+                    <p>Dynamic tools and self-evolved capabilities</p>
+                </header>
+                <div class="grid-container" id="skills-list">
+                    <!-- Loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- Agents Panel -->
+            <section id="agents-panel" class="tab-panel hidden">
+                <header class="panel-header glass">
+                    <h2>Agent Fabric</h2>
+                    <p>Cluster management and specialist status</p>
+                </header>
+                <div class="status-grid" id="agents-list">
+                    <!-- Loaded dynamically -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Artifacts & Activity Panel (Dynamic Column) -->
+        <aside class="activity-panel glass">
+            <header class="panel-header-small">
+                <h3>Artifacts & Traces</h3>
+                <button id="toggle-activity-btn" class="btn-icon">⟫</button>
+            </header>
+
+            <div id="artifact-container" class="artifact-view scrollable">
+                <div class="artifact-placeholder">
+                    <div class="icon">📦</div>
+                    <p>Code and artifacts will appear here after generation.</p>
+                </div>
+            </div>
+
+            <div class="console-section">
+                <div class="console-header">
+                    <span>System Console</span>
+                    <span class="status-dot green"></span>
+                </div>
+                <div id="system-console" class="console-output">
+                    [SYSTEM] OMNIOS v4.0 Active
+                    [LOG] Evolution roadmap complete.
+                    [LOG] Listening for specialized agent tasks...
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals (e.g. Approval Gate) -->
+    <div id="approval-modal" class="modal-overlay hidden">
+        <div class="modal glass">
+            <h3>Approval Required 🛡️</h3>
+            <p id="approval-text">OMNIOS is requesting permission for a sensitive action.</p>
+            <div class="modal-actions">
+                <button id="approve-btn" class="btn-primary">Approve</button>
+                <button id="deny-btn" class="btn-danger">Deny</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal glass">
+            <h3>System Settings ⚙️</h3>
+            <div class="settings-group">
+                <label>API Endpoint</label>
+                <input type="text" id="setting-api-url" value="http://localhost:8000">
+            </div>
+            <div class="settings-group">
+                <label>Secure API Key</label>
+                <input type="password" id="setting-api-key" value="omnios-default-secure-key">
+            </div>
+            <div class="modal-actions">
+                <button id="save-settings-btn" class="btn-primary">Save Changes</button>
+                <button id="close-settings-btn" class="btn-danger">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

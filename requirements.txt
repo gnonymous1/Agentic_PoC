@@ -1,0 +1,78 @@
+# Production requirements for AgentOS
+
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+gunicorn==21.2.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# ASGI/HTTP
+httpx==0.26.0
+python-multipart==0.0.6
+websockets==12.0
+
+# Database
+sqlalchemy==2.0.25
+alembic==1.13.1
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# Caching
+redis==5.0.1
+hiredis==2.3.2
+
+# LLM Integration
+langchain==0.1.4
+langchain-openai==0.0.5
+langchain-google-genai==0.0.6
+openai==1.10.0
+
+# Vector Store
+chromadb==0.4.22
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+cryptography==42.0.0
+
+# Monitoring & Observability
+prometheus-client==0.19.0
+sentry-sdk[fastapi]==1.40.0
+
+# Channels
+python-telegram-bot==20.7
+qrcode[pil]==7.4.2
+
+# Utilities
+pyyaml==6.0.1
+python-dateutil==2.8.2
+pytz==2024.1
+
+# Code Analysis (Self-Evolution)
+ast-grep==0.1.0
+
+# Knowledge Graph
+networkx==3.2.1
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.26.0
+
+# Development Tools
+black==24.1.1
+isort==5.13.2
+flake8==7.0.0
+mypy==1.8.0
+pre-commit==3.6.0
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+
+# Load Testing
+locust==2.20.0

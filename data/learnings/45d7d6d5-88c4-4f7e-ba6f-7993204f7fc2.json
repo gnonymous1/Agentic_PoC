@@ -1,0 +1,11 @@
+{
+  "type": "interaction_learning",
+  "input": "Write a report about the stock market.",
+  "response": "The stock market is up today...",
+  "feedback": {
+    "comment": "I prefer extremely concise bullet points and a professional tone.",
+    "rating": 5
+  },
+  "timestamp": "2026-02-17T14:26:06.250836",
+  "id": "45d7d6d5-88c4-4f7e-ba6f-7993204f7fc2"
+}

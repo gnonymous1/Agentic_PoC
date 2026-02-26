@@ -1,0 +1,12 @@
+{
+  "type": "interaction_learning",
+  "task_type": "reasoning",
+  "input": "Write a report about the stock market.",
+  "response": "The stock market is up today...",
+  "feedback": {
+    "comment": "I prefer extremely concise bullet points and a professional tone.",
+    "rating": 5
+  },
+  "timestamp": "2026-02-17T17:25:01.328360",
+  "id": "96433cb9-29ab-417e-bfde-ca49e98f7b9f"
+}

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI | Neuro-Symbolic Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css?v=2">
+    <link rel="stylesheet" href="/static/dashboard_enhancements.css">
+    <link rel="stylesheet" href="/static/platform.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Navigation & Actions -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div style="display: flex; flex-direction: column;">
+                    <h1>AGENTIC.AI</h1>
+                    <div class="status-indicator online">ONLINE</div>
+                </div>
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="btn-icon" onclick="toggleTheme()" title="Switch Theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="nav-section-title">Platform</div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-view="dashboard" onclick="switchView('dashboard')">
+                        <span class="icon">📊</span> Dashboard
+                    </a>
+                    <a href="#" class="nav-item" data-view="ops" onclick="switchView('ops')">
+                        <span class="icon">⚙️</span> Operations
+                    </a>
+                    <a href="#" class="nav-item" data-view="memory" onclick="switchView('memory')">
+                        <span class="icon">🧠</span> Memory
+                    </a>
+                    <a href="#" class="nav-item" data-view="settings" onclick="switchView('settings')">
+                        <span class="icon">🔧</span> Settings
+                    </a>
+                </nav>
+
+                <div class="nav-divider"></div>
+                <div class="nav-section-title">Automation</div>
+
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item" data-view="workflows" onclick="switchView('workflows')">
+                        <span class="icon">🔄</span> Workflows
+                    </a>
+                    <a href="#" class="nav-item" data-view="skills" onclick="switchView('skills')">
+                        <span class="icon">⚡</span> Skills
+                    </a>
+                    <a href="#" class="nav-item" data-view="agents" onclick="switchView('agents')">
+                        <span class="icon">🤖</span> Agents
+                    </a>
+                </nav>
+
+                <div class="sidebar-actions">
+                    <button class="btn primary full-width" onclick="openTaskModal()">+ New Mission</button>
+                </div>
+
+                <div class="widget">
+                    <h3>Quick Scripts</h3>
+                    <div id="scripts-list" class="action-list">
+                        <div class="action-item" onclick="executeScript('system_health')">
+                            <span class="action-name">System Health</span>
+                            <span class="action-icon">▶</span>
+                        </div>
+                        <div class="action-item" onclick="executeScript('quick_backup')">
+                            <span class="action-name">Quick Backup</span>
+                            <span class="action-icon">▶</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <h3>Controls</h3>
+                    <div class="control-item">
+                        <span>Step Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="step-mode-toggle" onchange="toggleStepMode(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button onclick="newChat()" class="btn secondary small full-width">New Chat</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- View Containers -->
+        <div class="views-wrapper">
+            <!-- Dashboard View -->
+            <main id="dashboard-view" class="view active chat-interface">
+                <div class="chat-header">
+                    <h2>Supervisor Uplink</h2>
+                    <span class="subtitle">Neuro-Symbolic Agent Mesh</span>
+                </div>
+
+                <div id="chat-history" class="chat-history">
+                    <div class="message system">
+                        <div class="content">System initialized. Waiting for input...</div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea id="user-input" placeholder="Enter command or query..."
+                        onkeydown="handleEnter(event)"></textarea>
+                    <div class="chat-controls">
+                        <button id="send-btn" onclick="sendMessage()" class="btn primary">SEND</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Operations View (Phase 3 Enhanced) -->
+            <main id="ops-view" class="view">
+                <div class="view-header">
+                    <h2>Advanced Operations</h2>
+                    <span class="subtitle">Synthesis Plans, Memory, Metrics & Code Evolution</span>
+                </div>
+                <div id="ops-content" class="ops-list">
+                    <!-- Synthesis Plan Viewer -->
+                    <div id="synthesis-viewer"></div>
+
+                    <!-- Metrics Dashboard -->
+                    <div id="metrics-dashboard"></div>
+
+                    <!-- Memory Explorer -->
+                    <div id="memory-explorer"></div>
+
+                    <!-- Code Evolution History -->
+                    <div id="evolution-history"></div>
+                </div>
+            </main>
+
+            <!-- Settings View -->
+            <main id="settings-view" class="view">
+                <div class="view-header">
+                    <h2>System Settings</h2>
+                    <span class="subtitle">Configure AgentOS parameters</span>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Model Configuration</h3>
+                        <label>Preferred LLM (Free Tier)</label>
+                        <select id="setting-llm">
+                            <option value="arcee-ai/trinity-large-preview:free" selected>Arcee AI: Trinity Large Preview
+                                (Free)</option>
+                            <option value="z-ai/glm-4.5-air:free">Z.ai: GLM 4.5 Air (Free)</option>
+                            <option value="nvidia/nemotron-3-nano-30b-a3b:free">NVIDIA: Nemotron 3 Nano 30B (Free)
+                            </option>
+                            <option value="qwen/qwen3-coder:free">Qwen: Qwen3 Coder (Free)</option>
+                        </select>
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Default: Arcee AI Trinity (Best for general tasks)
+                        </small>
+                    </div>
+                    <div class="setting-card">
+                        <h3>API Keys</h3>
+                        <input type="password" id="setting-api-key" placeholder="Enter API Key...">
+                        <button class="btn primary small" onclick="saveApiKey()">Save Key</button>
+                    </div>
+                    <div class="setting-card">
+                        <h3>Actions</h3>
+                        <button class="btn secondary" onclick="saveSettings()">Save All Settings</button>
+                        <button class="btn secondary" onclick="loadSettings()">Reload Settings</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Memory View -->
+            <main id="memory-view" class="view">
+                <div class="view-header">
+                    <h2>Memory System</h2>
+                    <span class="subtitle">Vector database and knowledge consolidation</span>
+                </div>
+                <div class="memory-interface">
+                    <div class="memory-search">
+                        <input type="text" id="memory-search-input" placeholder="Search memories..." />
+                        <button onclick="searchMemory()" class="btn primary">Search</button>
+                    </div>
+                    <div id="memory-results" class="memory-results">
+                        <div class="empty-state">No memories found. Start a conversation to build knowledge.</div>
+                    </div>
+                    <div class="memory-actions">
+                        <button onclick="consolidateMemory()" class="btn secondary">Consolidate Memory</button>
+                        <button onclick="wipeMemory()" class="btn danger">Wipe All Memory</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflows View (Phase 14) -->
+            <!-- WORKFLOWS VIEW (Visual Automation Studio) -->
+            <main id="workflows-view" class="view">
+                <div class="view-header">
+                    <h2>Workflow Studio</h2>
+                    <span class="subtitle">Design and Execute Multi-Agent Automations</span>
+                </div>
+
+                <div class="workflow-toolbar">
+                    <input type="text" id="workflow-name" placeholder="Workflow Name (e.g. Daily Research)"
+                        class="search-bar" style="width: 300px;">
+                    <div class="toolbar-actions">
+                        <button class="btn accent" onclick="openGenerateModal()">✨ Generate with AI</button>
+                        <button class="btn secondary" onclick="loadWorkflows()">📂 Load</button>
+                        <button class="btn secondary" onclick="saveWorkflow()">💾 Save</button>
+                        <button class="btn primary" onclick="runWorkflow()">▶ Run Workflow</button>
+                    </div>
+                </div>
+
+                <div class="workflow-container">
+                    <div id="workflow-steps" class="workflow-steps">
+                        <!-- Steps will be injected here -->
+                        <div class="empty-state">
+                            <p>No steps defined. Add a step to begin.</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-actions">
+                        <button class="btn secondary full-width" onclick="addWorkflowStep()">+ Add Step</button>
+                    </div>
+                </div>
+
+                <!-- Workflow Execution Log -->
+                <div id="workflow-logs" class="workflow-logs glass-panel" style="margin-top: 20px; display: none;">
+                    <h4>Execution Log</h4>
+                    <div id="workflow-log-content" class="terminal-content"></div>
+                </div>
+            </main>
+
+            <!-- Skills View (Phase 14) -->
+            <main id="skills-view" class="view">
+                <div class="view-header">
+                    <h2>Skill Registry</h2>
+                    <span class="subtitle">Available tools and capabilities</span>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" class="search-input" placeholder="Search skills..."
+                        onkeyup="filterGrid(this, 'skills-grid')">
+                </div>
+                <div id="skills-grid" class="grid-container">
+                    <!-- Skill Cards Injected Here -->
+                </div>
+            </main>
+
+            <!-- Agents View (Phase 14) -->
+            <main id="agents-view" class="view">
+                <div class="view-header">
+                    <h2>Agent Swarm Status</h2>
+                    <span class="subtitle">Real-time status of the neuro-symbolic mesh</span>
+                </div>
+                <div id="agents-grid" class="grid-container">
+                    <!-- Agent Cards Injected Here -->
+                </div>
+            </main>
+        </div>
+
+        <!-- Right Panel: Command Window & Mission Control -->
+        <aside class="right-panel">
+            <!-- Tabbed Right Panel (Phase 15) -->
+            <div class="right-panel-tabs">
+                <button class="tab-btn active" onclick="switchRightTab('terminal')">TERMINAL</button>
+                <button class="tab-btn" onclick="switchRightTab('artifacts')">ARTIFACTS</button>
+            </div>
+
+            <!-- Tab 1: Terminal (Mission Control) -->
+            <div id="tab-terminal" class="tab-content active">
+                <div class="command-window">
+                    <div id="command-output" class="command-output">
+                        <div class="cmd-line">> AgentOS initialized...</div>
+                    </div>
+                    <div class="command-input-area">
+                        <span class="prompt">&gt;</span>
+                        <input type="text" id="command-input" placeholder="Enter command..."
+                            onkeydown="handleCommandEnter(event)" />
+                    </div>
+                </div>
+
+                <div class="mission-control-panel">
+                    <div class="panel-header">
+                        <h3>Mission Control</h3>
+                        <div class="log-filters">
+                            <button class="filter-btn active" data-level="all" onclick="filterLogs('all')">ALL</button>
+                            <button class="filter-btn" data-level="error" onclick="filterLogs('error')">ERR</button>
+                        </div>
+                    </div>
+
+                    <!-- Agent Monitor (Moved inside Terminal Tab) -->
+                    <aside class="agent-monitor" style="overflow-y: hidden; height: 100%;">
+                        <div id="real-time-log" class="console-box" style="flex: 1; min-height: 0;">
+                            <div class="log-entry system">> Ready for deployment.</div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <!-- Tab 2: Artifacts (Phase 15) -->
+            <div id="tab-artifacts" class="tab-content">
+                <div class="artifacts-header">
+                    <h3>Generated Artifacts</h3>
+                    <button class="btn small secondary" onclick="clearArtifacts()">Clear</button>
+                </div>
+                <div id="artifacts-container" class="artifacts-container">
+                    <div class="empty-state">No artifacts generated yet.</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="/static/app.js?v=2"></script>
+    <script src="/static/dashboard_enhancements.js"></script>
+
+    <!-- Task Assignment Modal -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Mission</h2>
+                <span class="close-modal" onclick="closeTaskModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Objective</label>
+                    <textarea id="task-objective" placeholder="Describe the mission objective..." rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Assign Agents (Optional)</label>
+                    <div class="agent-selector" id="agent-selector">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="task-priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeTaskModal()">Cancel</button>
+                <button class="btn primary" onclick="submitTask()">Initialize Mission</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="profile-name">Agent Name</h2>
+                <span class="close-modal" onclick="closeProfileModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">🤖</div>
+                    <div class="profile-meta">
+                        <div class="status-badge" id="profile-status">Idle</div>
+                        <div class="role-badge" id="profile-role">Worker</div>
+                    </div>
+                </div>
+                <div class="profile-section">
+                    <h3>Directives</h3>
+                    <p id="profile-description">Description goes here...</p>
+                </div>
+                <div class="profile-section">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-log" id="profile-logs">
+                        <!-- Logs -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn primary" onclick="messageAgent()">Direct Message</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

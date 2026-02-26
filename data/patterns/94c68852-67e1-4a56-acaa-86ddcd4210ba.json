@@ -1,0 +1,13 @@
+{
+  "type": "behavioral_pattern",
+  "task_type": "reasoning",
+  "tags": [
+    "user_preference",
+    "style_guide",
+    "reasoning"
+  ],
+  "pattern": "I prefer extremely concise bullet points and a professional tone.",
+  "rating": 5,
+  "timestamp": "2026-02-17T14:26:53.180720",
+  "id": "94c68852-67e1-4a56-acaa-86ddcd4210ba"
+}

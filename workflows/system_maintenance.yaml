@@ -1,0 +1,19 @@
+name: "System Maintenance"
+description: "Automated system cleanup and optimization"
+steps:
+  - agent: "Operator"
+    action: "system_disk_operations"
+    params:
+      action: "list"
+  
+  - agent: "Operator"
+    action: "system_process_control"
+    params:
+      action: "list"
+  
+  - agent: "Operator"
+    action: "system_disk_operations"
+    params:
+      action: "cleanup"
+
+schedule: "daily"

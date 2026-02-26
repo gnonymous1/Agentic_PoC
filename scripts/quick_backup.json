@@ -1,0 +1,6 @@
+{
+    "name": "Quick Backup",
+    "description": "Backup important files to a specified directory",
+    "type": "python",
+    "script": "import shutil\nimport os\nfrom datetime import datetime\n\nbackup_dir = f'C:/Backups/backup_{datetime.now().strftime(\"%Y%m%d_%H%M%S\")}'\nos.makedirs(backup_dir, exist_ok=True)\n\n# Add your important directories here\nsources = ['C:/Users/Documents', 'C:/Projects']\n\nfor src in sources:\n    if os.path.exists(src):\n        dest = os.path.join(backup_dir, os.path.basename(src))\n        shutil.copytree(src, dest)\n        print(f'Backed up {src} to {dest}')\n\nprint(f'Backup complete: {backup_dir}')"
+}

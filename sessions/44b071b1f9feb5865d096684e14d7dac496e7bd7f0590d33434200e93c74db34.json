@@ -1,0 +1,13 @@
+{
+  "session_id": "44b071b1f9feb5865d096684e14d7dac496e7bd7f0590d33434200e93c74db34",
+  "device_id": "test_device_001",
+  "device_name": "Test Device",
+  "channel_type": "web",
+  "auth_token": "gAAAAABpktB_OuqF5e781j4mdvQ_gt-xkLpQb27OpGAoR0CngqCrrmGH0JmQKKS2p1oi1baHST23WQb0S4uYPQLvti-dZF9f9KJkqbCDPpXm9tPwPPnPSPzluJ1IGW4OoCLpi65sgABl",
+  "metadata": {
+    "test": true
+  },
+  "created_at": "2026-02-16T13:08:31.384952",
+  "expires_at": "2026-02-17T13:08:31.384952",
+  "last_active": "2026-02-16T13:08:31.384952"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "System Health Check",
+  "description": "Comprehensive system diagnostics including disk, network, and process status",
+  "type": "powershell",
+  "script": "Get-ComputerInfo | Select-Object CsName, WindowsVersion, OsArchitecture\nGet-Disk | Select-Object Number, FriendlyName, Size, PartitionStyle\nGet-NetAdapter | Select-Object Name, Status, LinkSpeed\nGet-Process | Sort-Object CPU -Descending | Select-Object -First 10 Name, CPU, WorkingSet"
+}

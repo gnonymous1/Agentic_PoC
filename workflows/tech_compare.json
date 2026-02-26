@@ -1,0 +1,1 @@
+{"name":"Tech Compare","steps":[{"agent":"Researcher","instruction":"Compare Rust vs C++"},{"agent":"Analyst","instruction":"Summarize performance differences"}]}

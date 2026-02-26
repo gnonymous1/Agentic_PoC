@@ -1,0 +1,14 @@
+{
+  "type": "cache_entry",
+  "prompt": "[{'role': 'user', 'content': 'Tell me the capital city of Spain?'}]",
+  "model_id": "gpt-4o",
+  "response": {
+    "content": "Madrid is the capital of Spain.",
+    "usage": {
+      "prompt_tokens": 10,
+      "completion_tokens": 5
+    }
+  },
+  "timestamp": "2026-02-17T14:22:16.139009",
+  "id": "efcb829c-a17f-43de-9955-af30db5b6141"
+}

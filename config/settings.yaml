@@ -1,0 +1,64 @@
+# OMNIOS v3.0 Configuration
+
+# ============================================
+# LLM PROVIDERS
+# ============================================
+providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    default_model: "gpt-4o-mini"
+
+  gemini:
+    api_key: "${GEMINI_API_KEY}"
+    default_model: "gemini-2.0-flash-exp"
+
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    default_model: "claude-sonnet-4-20250514"
+
+  ollama:
+    base_url: "http://localhost:11434"
+    default_model: "llama3.1:8b"
+    models_available:
+      - "llama3.1:8b"
+      - "llama3.1:70b"
+
+# ============================================
+# ROUTING PREFERENCES
+# ============================================
+routing:
+  default_priority: "balanced"  # speed, quality, cost, balanced, local_only
+  prefer_local: false
+  fallback_enabled: true
+  cache_ttl_seconds: 300
+
+# ============================================
+# MEMORY
+# ============================================
+memory:
+  type: "local"
+  path: "./data/chromadb"
+  embeddings: "default"
+  max_entries: 100000
+
+# ============================================
+# AUTONOMOUS BEHAVIOR
+# ============================================
+autonomous:
+  enabled: true
+  think_interval_seconds: 300
+  self_improve_interval_hours: 6
+  operating_mode: "copilot"  # autopilot, copilot, manual
+
+# ============================================
+# AGENTS
+# ============================================
+agents:
+  system:
+    enabled: true
+    allowed_operations: ["clipboard", "volume", "screenshot", "display"]
+  
+  web:
+    enabled: true
+    port: 8000
+    host: "0.0.0.0"

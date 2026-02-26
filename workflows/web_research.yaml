@@ -1,0 +1,20 @@
+name: "Web Research Workflow"
+description: "Search the web, extract information, and save to memory"
+steps:
+  - agent: "Surfer"
+    action: "open_url"
+    params:
+      url: "{{search_url}}"
+  
+  - agent: "Surfer"
+    action: "read_page"
+    
+  - agent: "Researcher"
+    action: "save_memory"
+    params:
+      content: "{{extracted_info}}"
+      source: "web_research"
+
+variables:
+  search_url: "https://www.google.com/search?q={{query}}"
+  query: ""
