@@ -3,6 +3,7 @@ import pygetwindow as gw
 import time
 import os
 import subprocess
+import asyncio
 import winreg
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
@@ -313,25 +314,52 @@ def system_file_operations(operation: Annotated[str, "read, write, delete, copy,
     except Exception as e:
         return f"Error in file operation: {e}"
 
+async def _run_command_async(args: List[str], timeout: int = 30) -> subprocess.CompletedProcess:
+    """
+    Asynchronously runs a subprocess command.
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        except asyncio.TimeoutError:
+            process.kill()
+            stdout, stderr = await process.communicate()
+            raise subprocess.TimeoutExpired(args, timeout, output=stdout, stderr=stderr)
+
+        return subprocess.CompletedProcess(
+            args,
+            process.returncode,
+            stdout=stdout.decode('utf-8', errors='replace'),
+            stderr=stderr.decode('utf-8', errors='replace')
+        )
+    except Exception as e:
+        raise e
+
 @tool
-def system_network_config(action: Annotated[str, "interfaces, ipconfig, ping, or netstat"], 
+async def system_network_config(action: Annotated[str, "interfaces, ipconfig, ping, or netstat"],
                          target: Optional[str] = None) -> str:
     """Network configuration and diagnostics."""
     try:
         if action == "interfaces":
-            result = subprocess.run(["ipconfig", "/all"], capture_output=True, text=True, timeout=10)
+            result = await _run_command_async(["ipconfig", "/all"], timeout=10)
             return f"Network interfaces:\n{result.stdout[:1000]}"
         
         elif action == "ipconfig":
-            result = subprocess.run(["ipconfig"], capture_output=True, text=True, timeout=10)
+            result = await _run_command_async(["ipconfig"], timeout=10)
             return f"IP Configuration:\n{result.stdout}"
         
         elif action == "ping" and target:
-            result = subprocess.run(["ping", "-n", "4", target], capture_output=True, text=True, timeout=15)
+            result = await _run_command_async(["ping", "-n", "4", target], timeout=15)
             return f"Ping {target}:\n{result.stdout}"
         
         elif action == "netstat":
-            result = subprocess.run(["netstat", "-an"], capture_output=True, text=True, timeout=10)
+            result = await _run_command_async(["netstat", "-an"], timeout=10)
             lines = result.stdout.split('\n')[:30]  # First 30 connections
             return "Active connections:\n" + "\n".join(lines)
         
