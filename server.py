@@ -372,37 +372,6 @@ async def chat_endpoint(request: Request, chat_request: ChatRequest):
     try:
         user_input = chat_request.message
         
-        # --- VERIFICATION MOCK FOR PARALLEL AGENTS ---
-        if "Research the current price of Ethereum" in user_input and "gas fees" in user_input:
-            logger.info("⚠️ VERIFICATION MODE: Intercepting parallel agent request")
-            event_bus = EventBus.get_sync()
-            
-            # Simulate processing time
-            import time
-            
-            # Emit routing event (Parallel)
-            event_bus.emit_sync(
-                EventType.AGENT_STATE_CHANGE,
-                {
-                    "action": "routing_decision",
-                    "next_agent": ["Researcher", "Coder"],
-                    "input_preview": user_input[:50]
-                },
-                source="supervisor"
-            )
-            
-            execution_logs = []
-            execution_logs.append(f"Received input: {user_input}")
-            execution_logs.append("Node: Supervisor")
-            execution_logs.append("  -> Routing to: ['Researcher', 'Coder']")
-            
-            return ChatResponse(
-                response="I've assigned the Researcher to find Ethereum prices and the Coder to write the gas fee script. They are working in parallel now.",
-                metadata={"next": ["Researcher", "Coder"]},
-                logs=execution_logs,
-                status="COMPLETED"
-            )
-        # -----------------------------------------------
 
         # HITL Continuation Logic
         if user_input == "CONTINUE":
