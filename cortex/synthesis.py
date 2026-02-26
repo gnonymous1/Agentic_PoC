@@ -979,7 +979,7 @@ class ExecutionOrchestrator:
     
     async def _execute_task(self, plan_id: str, task: Dict[str, Any]) -> Any:
         """
-        Execute a single task.
+        Execute a single task using dynamic tool lookup.
         
         Args:
             plan_id: Plan identifier
@@ -988,7 +988,8 @@ class ExecutionOrchestrator:
         Returns:
             Task execution result
         """
-        # Real task execution
+        from agent_fabric.tools import ALL_TOOLS
+
         agent = task.get("agent", "Operator")
         tool_name = task.get("tool", "unknown").lower()
         params = task.get("params", {})
@@ -996,44 +997,33 @@ class ExecutionOrchestrator:
         self._log(plan_id, f"Routing to agent: {agent}, tool: {tool_name}")
         
         try:
-            result_content = ""
+            # 1. Find the tool
+            target_tool = None
+            for tool in ALL_TOOLS:
+                if tool.name.lower() == tool_name:
+                    target_tool = tool
+                    break
 
-            # Tool Dispatcher
-            if "python" in tool_name or "code" in tool_name:
-                from agent_fabric.tools import execute_python
-                code = params.get("code") or params.get("script") or (list(params.values())[0] if params else "")
-                result_content = execute_python(code)
+            # Fuzzy fallback if exact match fails
+            if not target_tool:
+                for tool in ALL_TOOLS:
+                    if tool_name in tool.name.lower():
+                        target_tool = tool
+                        break
 
-            elif "search" in tool_name or "research" in tool_name:
-                from agent_fabric.tools import vector_search
-                query = params.get("query") or params.get("topic") or (list(params.values())[0] if params else "")
-                result_content = vector_search(query)
+            if not target_tool:
+                raise ValueError(f"Tool '{tool_name}' not found in registry.")
 
-            elif "multiply" in tool_name:
-                 from agent_fabric.tools import multiply
-                 a = int(params.get("a", 1))
-                 b = int(params.get("b", 1))
-                 result_content = str(multiply(a, b))
+            # 2. Execute the tool
+            # LangChain tools use .invoke() and handle args parsing
+            # We map the raw params dict to what invoke expects
 
-            elif "save" in tool_name and "memory" in tool_name:
-                 from agent_fabric.tools import save_memory
-                 content = params.get("content") or (list(params.values())[0] if params else "")
-                 result_content = save_memory(content)
-
-            elif "consolidate" in tool_name:
-                 from agent_fabric.tools import consolidate_memory
-                 result_content = consolidate_memory()
-
-            else:
-                 # Fallback: Check if it matches a known tool name directly
-                 # For now, if unknown, we log a warning but return a simulated success for UI
-                 self._log(plan_id, f"Tool '{tool_name}' not explicitly mapped. Simulating execution.")
-                 await asyncio.sleep(0.5)
-                 result_content = f"Simulated execution of {tool_name} with {params}"
+            self._log(plan_id, f"Invoking tool: {target_tool.name}")
+            result_content = target_tool.invoke(params)
 
             return {
                 "agent": agent,
-                "tool": tool_name,
+                "tool": target_tool.name,
                 "status": "completed",
                 "output": str(result_content)
             }

@@ -28,7 +28,10 @@ from cortex.events import EventBus, EventType
 from channels import get_gateway, get_agent_bridge, WebChannel, TelegramChannel
 
 # Import Tools for Discovery
-from agent_fabric.tools import multiply, vector_search, save_memory, execute_python, consolidate_memory
+from agent_fabric.tools import ALL_TOOLS
+
+# Import Workflow Registry
+from cortex.workflow_registry import workflow_registry, workflow_generator
 
 # Import Auth & Config
 from config.settings import get_settings
@@ -549,9 +552,18 @@ workflow_engine = WorkflowEngine(graph)
 script_executor = ScriptExecutor()
 
 @app.get("/workflows")
-async def list_workflows():
+async def list_workflows(category: Optional[str] = None):
     """List all available workflows."""
-    return {"workflows": workflow_engine.list_workflows()}
+    return {"workflows": workflow_registry.list_workflows(category)}
+
+@app.post("/workflows/generate_library")
+async def generate_workflow_library(count: int = 10, current_user: User = Depends(get_current_admin_user)):
+    """Generates a library of synthetic workflows."""
+    try:
+        workflow_generator.generate_presets(count)
+        return {"status": "success", "message": f"Generated {count} workflows."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 class WorkflowExecuteRequest(BaseModel):
     workflow_name: str
@@ -929,14 +941,13 @@ async def create_tool_endpoint(
 @app.get("/tools")
 async def list_tools():
     """List all available tools/skills."""
-    tools = [multiply, vector_search, save_memory, execute_python, consolidate_memory]
     return [
         {
             "name": t.name,
             "description": t.description,
             "args": t.args_schema.schema() if t.args_schema else {}
         }
-        for t in tools
+        for t in ALL_TOOLS
     ]
 
 @app.get("/agents")

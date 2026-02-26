@@ -1,0 +1,11 @@
+[
+  {
+    "content": "Paris is the capital of France",
+    "meta": {
+      "source": "test_execution"
+    },
+    "type": "text",
+    "timestamp": "2026-02-26T11:11:07.607999",
+    "embedding": null
+  }
+]

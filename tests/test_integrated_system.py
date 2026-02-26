@@ -77,10 +77,34 @@ async def test_integrated_system_lifecycle(setup_mocks):
 
     # 2. Execution Phase
     print("[TEST] 2. Execution Phase")
-    # We need to mock the tools to avoid real execution side effects or dependency on external tools
-    with patch('agent_fabric.tools.vector_search', return_value="Paris is the capital of France.") as mock_search, \
-         patch('agent_fabric.tools.multiply', return_value=20000) as mock_multiply:
+    # Pydantic models (like StructuredTool) are strict about attribute setting/patching.
+    # We will patch the tool objects in the synthesis.py module where they are imported
+    # BUT dynamic import happens inside the function.
+    # So we must patch the tool objects in the source module `agent_fabric.tools`.
+    # However, since they are Pydantic objects, `patch.object` on a method might fail if the method is not in __dict__.
+    # The safest way is to wrap the tool's `invoke` method manually or mock the tool in `ALL_TOOLS`.
 
+    from agent_fabric.tools import ALL_TOOLS
+
+    # Create mocks
+    mock_search_tool = MagicMock()
+    mock_search_tool.name = "vector_search"
+    mock_search_tool.invoke.return_value = "Paris is the capital of France."
+
+    mock_multiply_tool = MagicMock()
+    mock_multiply_tool.name = "multiply"
+    mock_multiply_tool.invoke.return_value = 20000
+
+    # Replace in ALL_TOOLS temporarily
+    original_tools = list(ALL_TOOLS)
+
+    # Filter out originals and add mocks
+    new_tools = [t for t in ALL_TOOLS if t.name not in ["vector_search", "multiply"]]
+    new_tools.append(mock_search_tool)
+    new_tools.append(mock_multiply_tool)
+
+    # Patch ALL_TOOLS in agent_fabric.tools
+    with patch('agent_fabric.tools.ALL_TOOLS', new_tools):
         result = await execute_synthesis_plan(plan)
 
         assert result["status"] == "completed"
@@ -88,8 +112,8 @@ async def test_integrated_system_lifecycle(setup_mocks):
         assert result["failed_tasks"] == 0
 
         # Verify tool calls
-        mock_search.assert_called()
-        mock_multiply.assert_called()
+        mock_search_tool.invoke.assert_called()
+        mock_multiply_tool.invoke.assert_called()
         print("[TEST] Execution Completed Successfully")
 
         # 3. Reflection Phase (Implicit in execution)
