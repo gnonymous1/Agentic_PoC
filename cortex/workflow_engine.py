@@ -379,11 +379,35 @@ class ScriptExecutor:
     
     def __init__(self):
         self.scripts_dir = "scripts"
-        self.allowed_modules = [
-            "os", "sys", "json", "yaml", "datetime", "time", "math", "random",
-            "re", "string", "collections", "itertools", "functools", "pathlib",
-            "subprocess", "threading", "asyncio", "logging", "typing"
+        self.safe_modules = [
+            "json", "yaml", "datetime", "time", "math", "random", "re",
+            "string", "collections", "itertools", "functools", "typing"
         ]
+
+    def _validate_python_script(self, script_content: str):
+        """Validates Python script for security issues using AST."""
+        import ast
+        try:
+            tree = ast.parse(script_content)
+        except SyntaxError as e:
+            raise ValueError(f"Syntax error in script: {e}")
+
+        for node in ast.walk(tree):
+            # Prevent access to private/special attributes (e.g., __class__, __subclasses__)
+            if isinstance(node, ast.Attribute):
+                if node.attr.startswith('__'):
+                    raise ValueError(f"Security violation: Access to private attribute '{node.attr}' is forbidden")
+
+            # Prevent dangerous built-in calls
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    forbidden_calls = [
+                        'eval', 'exec', 'getattr', 'setattr', 'delattr', 'input',
+                        'breakpoint', 'globals', 'locals', 'vars', 'help', 'dir',
+                        'id', 'type', 'hash', 'compile'
+                    ]
+                    if node.func.id in forbidden_calls:
+                        raise ValueError(f"Security violation: Call to '{node.func.id}()' is forbidden")
     
     def load_script(self, script_name: str) -> Dict[str, Any]:
         """
@@ -473,56 +497,93 @@ class ScriptExecutor:
         if script_type == "python":
             # Execute Python script in sandbox
             try:
+                # Validate script content
+                self._validate_python_script(script_content)
+
+                # Define restricted builtins
+                restricted_builtins = {
+                    "print": print,
+                    "len": len,
+                    "str": str,
+                    "int": int,
+                    "float": float,
+                    "bool": bool,
+                    "list": list,
+                    "dict": dict,
+                    "set": set,
+                    "tuple": tuple,
+                    "range": range,
+                    "enumerate": enumerate,
+                    "zip": zip,
+                    "map": map,
+                    "filter": filter,
+                    "sorted": sorted,
+                    "sum": sum,
+                    "max": max,
+                    "min": min,
+                    "abs": abs,
+                    "round": round,
+                    "pow": pow,
+                    "divmod": divmod,
+                    "isinstance": isinstance,
+                    "issubclass": issubclass,
+                    "callable": callable,
+                    "Exception": Exception,
+                    "ValueError": ValueError,
+                    "TypeError": TypeError,
+                    "RuntimeError": RuntimeError,
+                    "StopIteration": StopIteration,
+                    "ImportError": ImportError,
+                    "IndexError": IndexError,
+                    "KeyError": KeyError,
+                }
+
+                # Safe open implementation based on permissions
+                def restricted_open(file, mode='r', *args, **kwargs):
+                    if 'r' in mode and 'read_files' not in permissions and 'system_access' not in permissions:
+                        raise PermissionError("Read access denied. 'read_files' permission required.")
+                    if any(m in mode for m in 'wax+') and 'write_files' not in permissions and 'system_access' not in permissions:
+                        raise PermissionError("Write access denied. 'write_files' permission required.")
+                    return open(file, mode, *args, **kwargs)
+
+                restricted_builtins["open"] = restricted_open
+
+                # Restricted import implementation
+                def restricted_import(name, globals=None, locals=None, fromlist=(), level=0):
+                    if name in self.safe_modules:
+                        return __import__(name, globals, locals, fromlist, level)
+
+                    if name in ["os", "sys", "subprocess", "shutil", "pathlib", "threading", "asyncio", "logging"]:
+                        if "system_access" in permissions:
+                            return __import__(name, globals, locals, fromlist, level)
+                        raise ImportError(f"Module '{name}' requires 'system_access' permission")
+
+                    if "network_access" in permissions and name in ["socket", "http", "urllib", "requests"]:
+                        return __import__(name, globals, locals, fromlist, level)
+
+                    raise ImportError(f"Module '{name}' is not allowed in this sandbox")
+
+                restricted_builtins["__import__"] = restricted_import
+
                 # Create restricted execution environment
                 exec_globals = {
-                    "__builtins__": {
-                        "print": print,
-                        "len": len,
-                        "str": str,
-                        "int": int,
-                        "float": float,
-                        "bool": bool,
-                        "list": list,
-                        "dict": dict,
-                        "set": set,
-                        "tuple": tuple,
-                        "range": range,
-                        "enumerate": enumerate,
-                        "zip": zip,
-                        "map": map,
-                        "filter": filter,
-                        "sorted": sorted,
-                        "sum": sum,
-                        "max": max,
-                        "min": min,
-                        "abs": abs,
-                        "round": round,
-                        "pow": pow,
-                        "divmod": divmod,
-                        "hash": hash,
-                        "id": id,
-                        "type": type,
-                        "isinstance": isinstance,
-                        "issubclass": issubclass,
-                        "callable": callable,
-                        "dir": dir,
-                        "help": help,
-                        "input": input,
-                        "open": open,
-                        "exit": exit,
-                        "quit": quit
-                    }
+                    "__builtins__": restricted_builtins,
+                    "PERMISSIONS": permissions
                 }
                 
-                # Add allowed modules
-                for module in self.allowed_modules:
+                # Pre-import allowed modules into globals for convenience
+                for module in self.safe_modules:
                     try:
                         exec_globals[module] = __import__(module)
                     except:
                         pass
                 
-                # Add permissions to globals
-                exec_globals["PERMISSIONS"] = permissions
+                if "system_access" in permissions:
+                    for module in ["os", "sys", "subprocess", "shutil", "pathlib"]:
+                        try:
+                            exec_globals[module] = __import__(module)
+                        except:
+                            pass
                 
                 # Execute script
                 exec(script_content, exec_globals)
@@ -544,9 +605,26 @@ class ScriptExecutor:
             # Execute PowerShell script with security controls
             import subprocess
             try:
-                # Create restricted execution policy
+                # Basic PowerShell validation
+                dangerous_ps_keywords = [
+                    "Remove-Item", "Set-Content", "Get-Credential",
+                    "Invoke-WebRequest", "Invoke-RestMethod", "Invoke-Expression",
+                    "Start-Process", "Net-", "Add-Type", "Export-", "Import-Module"
+                ]
+
+                # Link validation to permissions
+                for keyword in dangerous_ps_keywords:
+                    if keyword.lower() in script_content.lower():
+                        # If keyword is for network access, check that permission
+                        if keyword in ["Invoke-WebRequest", "Invoke-RestMethod"] and "network_access" in permissions:
+                            continue
+                        # All other dangerous keywords require system_access
+                        if "system_access" not in permissions:
+                            return {"status": "error", "message": f"Security violation: PowerShell command '{keyword}' requires appropriate permissions"}
+
+                # Create restricted execution policy with security flags
                 result = subprocess.run(
-                    ["powershell", "-Command", f"Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; {script_content}"],
+                    ["powershell", "-NoProfile", "-NonInteractive", "-Command", f"Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; {script_content}"],
                     capture_output=True,
                     text=True,
                     timeout=30
