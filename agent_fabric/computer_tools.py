@@ -1,9 +1,25 @@
-import pyautogui
-import pygetwindow as gw
 import time
+from unittest.mock import MagicMock
+
+try:
+    import pyautogui
+except (ImportError, KeyError, OSError):
+    print("WARNING: pyautogui not available (likely headless). Mocking it.")
+    pyautogui = MagicMock()
+    pyautogui.FAILSAFE = True
+    pyautogui.PAUSE = 0.5
+
+try:
+    import pygetwindow as gw
+except (ImportError, KeyError, OSError, NotImplementedError):
+    print("WARNING: pygetwindow not available. Mocking it.")
+    gw = MagicMock()
 import os
 import subprocess
-import winreg
+try:
+    import winreg
+except ImportError:
+    winreg = MagicMock()
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
 

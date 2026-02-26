@@ -564,7 +564,7 @@ async def list_scripts():
     """List all available scripts."""
     return {"scripts": script_executor.list_scripts()}
 
-class ScriptRequest(BaseModel):
+class ScriptExecuteRequest(BaseModel):
     script_name: str
 
 class WorkflowStep(BaseModel):
@@ -668,7 +668,10 @@ Do not include markdown formatting (```json), just the raw JSON string.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/scripts/execute")
-async def execute_script(request: ScriptExecuteRequest):
+async def execute_script(
+    request: ScriptExecuteRequest,
+    current_user: User = Depends(get_current_active_user)
+):
     """Execute a script."""
     try:
         result = await script_executor.execute_script(request.script_name)
