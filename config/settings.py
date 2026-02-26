@@ -53,6 +53,10 @@ class SecurityConfig(BaseModel):
     access_token_expire_minutes: int = Field(default=30)
     allowed_origins: list[str] = Field(default=["http://localhost:3000", "http://localhost:8000"])
 
+    # Admin User
+    admin_password: str = Field(default="admin123")
+    admin_email: str = Field(default="admin@agentos.local")
+
 
 class ObservabilityConfig(BaseModel):
     """Observability configuration"""
@@ -140,6 +144,8 @@ def load_config(environment: Optional[str] = None) -> Settings:
             raise ValueError("JWT_SECRET must be changed in production!")
         if not settings.llm.api_key:
             raise ValueError("LLM_API_KEY must be set in production!")
+        if settings.security.admin_password == "admin123":
+             raise ValueError("Admin password must be changed in production!")
     
     return settings
 

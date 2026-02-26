@@ -118,10 +118,10 @@ def setup_admin_user():
         if not admin:
             logger.info("Creating default admin user...")
             # Create admin
-            password_hash = auth_service.hash_password("admin123") # Change in production
+            password_hash = auth_service.hash_password(settings.security.admin_password) # Change in production
             new_admin = User(
                 username="admin",
-                email="admin@agentos.local",
+                email=settings.security.admin_email,
                 password_hash=password_hash,
                 role="admin",
                 is_active=True
