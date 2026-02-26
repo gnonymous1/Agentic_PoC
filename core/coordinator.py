@@ -313,7 +313,10 @@ class CoordinatorAgent:
 
     def _is_sensitive(self, task: dict) -> bool:
         """Heuristic check for sensitive operations requiring human approval."""
-        action = task.get("action", "").lower()
+        action = task.get("action", "")
+        if not action:
+            return False
+        action = action.lower()
         sensitive_keywords = ["delete", "remove", "wipe", "format", "terminate", "reboot"]
         return any(k in action for k in sensitive_keywords)
 
