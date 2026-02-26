@@ -111,15 +111,16 @@ limiter = Limiter(key_func=get_remote_address)
 def setup_admin_user():
     """Ensure default admin user exists"""
     from database import SessionLocal
+    from database.models import User as UserModel
     db = SessionLocal()
     try:
         # Check if admin exists
-        admin = db.query(User).filter(User.username == "admin").first()
+        admin = db.query(UserModel).filter(UserModel.username == "admin").first()
         if not admin:
             logger.info("Creating default admin user...")
             # Create admin
             password_hash = auth_service.hash_password("admin123") # Change in production
-            new_admin = User(
+            new_admin = UserModel(
                 username="admin",
                 email="admin@agentos.local",
                 password_hash=password_hash,
@@ -362,7 +363,7 @@ async def interrupt_endpoint():
 
 @app.post("/chat", response_model=ChatResponse)
 @limiter.limit("100/minute")
-async def chat_endpoint(request: Request, chat_request: ChatRequest):
+async def chat_endpoint(request: Request, chat_request: ChatRequest, current_user: User = Depends(get_current_active_user)):
     """
     Interacts with the Agent Graph.
     Note: logical graph run is synchronous, so we await it in a blocking way or run it directly.
@@ -666,6 +667,9 @@ Do not include markdown formatting (```json), just the raw JSON string.
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+class ScriptExecuteRequest(BaseModel):
+    script_name: str
 
 @app.post("/scripts/execute")
 async def execute_script(request: ScriptExecuteRequest):

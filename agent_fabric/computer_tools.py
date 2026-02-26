@@ -1,15 +1,27 @@
-import pyautogui
-import pygetwindow as gw
 import time
 import os
 import subprocess
-import winreg
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
 
-# Safety Defaults
-pyautogui.FAILSAFE = True
-pyautogui.PAUSE = 0.5
+# Mock pyautogui and pygetwindow if not available (e.g. headless)
+try:
+    import pyautogui
+    import pygetwindow as gw
+    # Safety Defaults
+    pyautogui.FAILSAFE = True
+    pyautogui.PAUSE = 0.5
+except (ImportError, KeyError, Exception) as e:
+    print(f"Warning: pyautogui or dependencies not available: {e}. Running in headless mode.")
+    from unittest.mock import MagicMock
+    pyautogui = MagicMock()
+    gw = MagicMock()
+
+try:
+    import winreg
+except ImportError:
+    # Not on Windows
+    winreg = None
 
 def _safety_guard(action_name: str):
     """
