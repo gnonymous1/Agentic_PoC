@@ -15,6 +15,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from utils.logger import setup_logging
+from utils.encryption import encrypt_value
 
 logger = setup_logging()
 
@@ -111,17 +112,18 @@ limiter = Limiter(key_func=get_remote_address)
 def setup_admin_user():
     """Ensure default admin user exists"""
     from database import SessionLocal
+    from database.models import User as DBUser
     db = SessionLocal()
     try:
         # Check if admin exists
-        admin = db.query(User).filter(User.username == "admin").first()
+        admin = db.query(DBUser).filter(DBUser.username == "admin").first()
         if not admin:
             logger.info("Creating default admin user...")
             # Create admin
             password_hash = auth_service.hash_password("admin123") # Change in production
-            new_admin = User(
+            new_admin = DBUser(
                 username="admin",
-                email="admin@agentos.local",
+                email="admin@agentos.com",
                 password_hash=password_hash,
                 role="admin",
                 is_active=True
@@ -567,6 +569,8 @@ async def list_scripts():
 class ScriptRequest(BaseModel):
     script_name: str
 
+ScriptExecuteRequest = ScriptRequest
+
 class WorkflowStep(BaseModel):
     agent: str
     instruction: str
@@ -947,6 +951,9 @@ async def update_api_key(request: ApiKeyRequest, current_user: User = Depends(ge
         # Update current process environment
         os.environ["OPENAI_API_KEY"] = request.api_key
         
+        # Encrypt key before persisting
+        encrypted_key = encrypt_value(request.api_key)
+
         # Persist to .env file
         lines = []
         if os.path.exists(env_path):
@@ -957,13 +964,13 @@ async def update_api_key(request: ApiKeyRequest, current_user: User = Depends(ge
         new_lines = []
         for line in lines:
             if line.strip().startswith("OPENAI_API_KEY="):
-                new_lines.append(f"OPENAI_API_KEY={request.api_key}\n")
+                new_lines.append(f"OPENAI_API_KEY={encrypted_key}\n")
                 key_found = True
             else:
                 new_lines.append(line)
         
         if not key_found:
-            new_lines.append(f"\nOPENAI_API_KEY={request.api_key}\n")
+            new_lines.append(f"\nOPENAI_API_KEY={encrypted_key}\n")
             
         with open(env_path, "w") as f:
             f.writelines(new_lines)

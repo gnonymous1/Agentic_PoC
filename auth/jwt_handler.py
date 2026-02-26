@@ -138,10 +138,11 @@ class AuthService:
         expires_delta = timedelta(minutes=self.token_expire_minutes)
         expire = datetime.utcnow() + expires_delta
         
+        role = user.role.value if hasattr(user.role, "value") else user.role
         to_encode = {
             "user_id": user.id,
             "username": user.username,
-            "role": user.role.value,
+            "role": role,
             "exp": expire
         }
         

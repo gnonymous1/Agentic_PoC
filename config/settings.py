@@ -7,8 +7,9 @@ import os
 import yaml
 from pathlib import Path
 from typing import Any, Dict, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings
+from utils.encryption import decrypt_value
 
 
 class DatabaseConfig(BaseModel):
@@ -43,6 +44,14 @@ class LLMConfig(BaseModel):
         "nvidia/nemotron-3-nano-30b-a3b:free",
         "qwen/qwen3-coder:free"
     ])
+
+    @field_validator("api_key", "openrouter_api_key", mode="before")
+    @classmethod
+    def decrypt_api_key(cls, v):
+        """Decrypt API key if it's encrypted"""
+        if v:
+            return decrypt_value(v)
+        return v
 
 
 class SecurityConfig(BaseModel):
