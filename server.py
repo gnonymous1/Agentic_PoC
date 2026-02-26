@@ -498,6 +498,16 @@ async def get_memory():
     except Exception as e:
         return []
 
+@app.get("/memory/stats")
+async def get_memory_stats():
+    """Returns memory system statistics."""
+    return memory.get_summary()
+
+@app.get("/memory/layer/{layer_name}")
+async def get_memory_layer(layer_name: str):
+    """Returns statistics for a specific memory layer."""
+    return memory.get_summary(layer=layer_name)
+
 class WipeRequest(BaseModel):
     confirmation: str  # Must be "CONFIRM_WIPE"
 
@@ -747,7 +757,7 @@ async def list_synthesis_plans():
     try:
         from cortex.synthesis import list_active_plans
         plans = list_active_plans()
-        return {"plans": plans}
+        return {"active_plans": plans}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

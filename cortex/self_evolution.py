@@ -188,6 +188,9 @@ class SelfEvolutionEngine:
         
         print(f"[EVOLUTION] Proposed modification {mod_id}: {mod_type} to {file_path}")
         
+        # Store in history (unapplied)
+        self.modification_history.append(modification)
+
         return modification
     
     def apply_modification(self, modification: Modification, safe_mode: bool = True) -> bool:
@@ -219,7 +222,7 @@ class SelfEvolutionEngine:
                     f.write(modification.new_content)
                 
                 modification.applied = True
-                self.modification_history.append(modification)
+                # modification is already in history, just updated status
                 
                 # Emit success event
                 self.event_bus.emit_sync(
