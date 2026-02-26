@@ -498,6 +498,16 @@ async def get_memory():
     except Exception as e:
         return []
 
+@app.post("/consolidate")
+async def consolidate_memory_endpoint():
+    """Trigger memory consolidation."""
+    try:
+        result = memory.consolidate()
+        return result
+    except Exception as e:
+        logger.error(f"Consolidation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 class WipeRequest(BaseModel):
     confirmation: str  # Must be "CONFIRM_WIPE"
 
