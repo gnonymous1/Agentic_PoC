@@ -36,6 +36,9 @@ class L1Cache:
         return None
 
     def set(self, key: str, value: Any, ttl: int = 3600):
+        if self.max_size <= 0:
+            return
+
         expiry = time.time() + ttl if ttl else None
         
         if len(self.cache) >= self.max_size and key not in self.cache:
