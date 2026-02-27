@@ -1,0 +1,14 @@
+{
+  "type": "cache_entry",
+  "prompt": "[{'role': 'user', 'content': 'Hello'}]",
+  "model_id": "gpt-4o",
+  "response": {
+    "content": "Mock Response",
+    "usage": {
+      "prompt_tokens": 10,
+      "completion_tokens": 10
+    }
+  },
+  "timestamp": "2026-02-27T15:45:27.572099",
+  "id": "fcaf6f3d-ead8-4463-8f54-d1406a406fe7"
+}

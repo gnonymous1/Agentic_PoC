@@ -24,7 +24,7 @@ async def mock_provider_call(*args, **kwargs):
 async def test_caching():
     print("\n[TEST] Testing Caching Layer...")
     router = LLMRouter(MOCK_CONFIG)
-    router._call_openai_compatible_impl = mock_provider_call # Bypass retry logic for simple mocking
+    router._call_openai_compatible = mock_provider_call # Bypass retry logic for simple mocking
     
     # 1. First Call (Miss)
     print("  Request 1 (Cold)...")

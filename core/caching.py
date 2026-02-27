@@ -3,7 +3,6 @@ import hashlib
 import json
 import time
 import os
-import pickle
 from datetime import datetime
 from typing import Optional, Any
 from enum import Enum
@@ -63,7 +62,7 @@ class L2Cache:
     def _get_path(self, key: str) -> str:
         # User safe filename logic
         safe_key = hashlib.md5(key.encode()).hexdigest()
-        return os.path.join(self.directory, f"{safe_key}.pickle")
+        return os.path.join(self.directory, f"{safe_key}.json")
 
     async def get(self, key: str) -> Optional[Any]:
         path = self._get_path(key)
@@ -71,8 +70,8 @@ class L2Cache:
             try:
                 # Run in thread to avoid blocking loop
                 def load():
-                    with open(path, "rb") as f:
-                        return pickle.load(f)
+                    with open(path, "r") as f:
+                        return json.load(f)
                 entry = await asyncio.to_thread(load)
                 
                 if entry["expiry"] and time.time() > entry["expiry"]:
@@ -89,8 +88,8 @@ class L2Cache:
         path = self._get_path(key)
         
         def save():
-            with open(path, "wb") as f:
-                pickle.dump(entry, f)
+            with open(path, "w") as f:
+                json.dump(entry, f, default=str)
         await asyncio.to_thread(save)
 
     async def delete(self, key: str):
