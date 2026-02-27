@@ -4,6 +4,8 @@ import time
 import os
 import subprocess
 import winreg
+import shlex
+import sys
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
 
@@ -220,7 +222,17 @@ def system_shell_exec(command: str, use_powershell: bool = True) -> str:
 def computer_open_app(command: Annotated[str, "Command to run (e.g. 'notepad', 'calc')"]) -> str:
     """Opens an application by running a command."""
     try:
-        subprocess.Popen(command, shell=True)
+        # Prevent command injection by avoiding shell=True
+        is_windows = sys.platform == 'win32'
+        args = shlex.split(command, posix=not is_windows)
+
+        # On Windows, shlex in non-posix mode preserves double quotes,
+        # but subprocess.Popen list2cmdline will re-quote them, potentially breaking arguments.
+        # We strip surrounding double quotes to ensure clean argument passing.
+        if is_windows:
+            args = [arg.strip('"') for arg in args]
+
+        subprocess.Popen(args, shell=False)
         return f"Launched: {command}"
     except Exception as e:
         return f"Error launching app: {e}"
