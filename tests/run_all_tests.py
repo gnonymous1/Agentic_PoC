@@ -4,6 +4,7 @@ import os
 
 TEST_SCRIPTS = [
     "tests/test_observability_phase1.py",
+    "tests/test_cost_tracker.py",
     "tests/test_resilience_phase2.py",
     "tests/test_performance_phase3.py",
     "tests/test_learning_phase4.py",
