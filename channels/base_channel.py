@@ -40,7 +40,7 @@ class Channel(ABC):
         Returns:
             True if started successfully, False otherwise
         """
-        pass
+        raise NotImplementedError("Subclasses must implement start")
     
     @abstractmethod
     async def stop(self) -> bool:
@@ -50,7 +50,7 @@ class Channel(ABC):
         Returns:
             True if stopped successfully, False otherwise
         """
-        pass
+        raise NotImplementedError("Subclasses must implement stop")
     
     @abstractmethod
     async def send_message(self, to: str, message: str, **kwargs) -> bool:
@@ -65,7 +65,7 @@ class Channel(ABC):
         Returns:
             True if sent successfully, False otherwise
         """
-        pass
+        raise NotImplementedError("Subclasses must implement send_message")
     
     def on_message(self, handler: Callable[[Dict[str, Any]], None]):
         """
