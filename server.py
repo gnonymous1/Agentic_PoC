@@ -354,6 +354,14 @@ async def config_endpoint(request: ConfigRequest):
     gs.STEP_MODE = request.step_mode
     return {"status": "Config updated", "step_mode": gs.STEP_MODE}
 
+@app.get("/config/client")
+async def get_client_config():
+    """Get public client-side configuration."""
+    return {
+        "web_channel_port": settings.web_channel_port,
+        "environment": settings.environment
+    }
+
 @app.post("/interrupt")
 async def interrupt_endpoint():
     import agent_fabric.global_state as gs
@@ -614,6 +622,9 @@ async def execute_workflow(workflow: Workflow):
 
 class GenerateWorkflowRequest(BaseModel):
     prompt: str
+
+class ScriptExecuteRequest(BaseModel):
+    script_name: str
 
 @app.post("/workflows/generate")
 async def generate_workflow(request: GenerateWorkflowRequest):

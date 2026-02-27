@@ -25,19 +25,37 @@ function toggleTheme() {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
+    await fetchConfig(); // Load config before other inits if needed, though mostly for WS
     // ... existing init code ...
 });
 let isThinking = false;
 let socket = null;
 let inputTimeoutId = null; // Track timeout for auto-re-enabling input
+let webChannelPort = 8766; // Default fallback
+
+// Configuration Loading
+async function fetchConfig() {
+    try {
+        const res = await fetch(`${API_BASE}/config/client`);
+        if (res.ok) {
+            const config = await res.json();
+            if (config.web_channel_port) {
+                webChannelPort = config.web_channel_port;
+                console.log(`[Config] Loaded Web Channel Port: ${webChannelPort}`);
+            }
+        }
+    } catch (e) {
+        console.warn("[Config] Failed to fetch client config, using defaults", e);
+    }
+}
 
 // WebSocket Connection
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
-    const port = 8766; // WebChannel port
+    const port = webChannelPort; // Use configured port
 
     try {
         socket = new WebSocket(`${protocol}//${host}:${port}`);
@@ -58,7 +76,7 @@ function connectWebSocket() {
         };
 
         socket.onerror = (error) => {
-            console.warn("WebSocket error (port 8766 may not be running):", error);
+            console.warn(`WebSocket error (port ${port} may not be running):`, error);
             document.querySelector('.status-indicator').innerText = "ONLINE";
         };
 

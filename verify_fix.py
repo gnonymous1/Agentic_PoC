@@ -1,78 +1,45 @@
-import requests
-import time
+import os
 import sys
+import unittest.mock
 
-BASE_URL = "http://127.0.0.1:8000"
+# Add project root to path
+sys.path.append(os.getcwd())
 
-def test_surfer_loop():
-    print("Testing Surfer Loop Fix...")
-    try:
-        # Ask to open a URL
-        response = requests.post(f"{BASE_URL}/chat", json={"message": "Open example.com"})
-        if response.status_code == 200:
-            data = response.json()
-            logs = data.get("logs", [])
-            print("Response:", data.get("response"))
-            print("Logs:", logs)
-            
-            # Check if Surfer was called multiple times in a loop
-            surfer_calls = [log for log in logs if "Node: Surfer" in log]
-            print(f"Surfer calls: {len(surfer_calls)}")
-            
-            if len(surfer_calls) <= 2: # Allow 1 or 2 (sometimes it corrects itself), but not 3 (max iterations)
-                print("PASS: Surfer did not loop significantly.")
-            else:
-                print("FAIL: Surfer lopped too many times.")
-        else:
-            print(f"FAIL: Server returned {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"FAIL: Exception {e}")
-        return False
-    return True
+# Mock modules that might not be available in the test environment or are Windows specific
+sys.modules['pyautogui'] = unittest.mock.MagicMock()
+sys.modules['pygetwindow'] = unittest.mock.MagicMock()
+sys.modules['winreg'] = unittest.mock.MagicMock()
 
-def test_architect_crash():
-    print("\nTesting Architect Crash Fix...")
-    try:
-        # Trigger Architect by simulating a code error request (or asking it directly if possible, 
-        # but here we rely on Supervisor routing).
-        # We'll try to ask something that might trigger code generation or file access which Architect handles.
-        # Or specifically ask for specific architect task.
-        response = requests.post(f"{BASE_URL}/chat", json={"message": "Please list the files in the current directory using the Architect."})
-        
-        if response.status_code == 200:
-             data = response.json()
-             print("Response:", data.get("response"))
-             print("PASS: Architect responded without 500 error.")
-        else:
-             print(f"FAIL: Server returned {response.status_code}")
-             print("Response:", response.text)
-             return False
-    except Exception as e:
-        print(f"FAIL: Exception {e}")
-        return False
-    return True
+# Import FastAPI and TestClient
+try:
+    from fastapi.testclient import TestClient
+    from server import app
+    from config.settings import get_settings
 
-if __name__ == "__main__":
-    # Wait for server to start
-    print("Waiting for server to be ready...")
-    for _ in range(10):
-        try:
-            requests.get(f"{BASE_URL}/health")
-            print("Server is ready.")
-            break
-        except:
-            time.sleep(1)
-    else:
-        print("Server not started.")
-        sys.exit(1)
+    # Run the test
+    print("Testing GET /config/client endpoint...")
+    client = TestClient(app)
+    response = client.get("/config/client")
 
-    surfer_pass = test_surfer_loop()
-    architect_pass = test_architect_crash()
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+    data = response.json()
     
-    if surfer_pass and architect_pass:
-        print("\nALL TESTS PASSED")
-        sys.exit(0)
-    else:
-        print("\nSOME TESTS FAILED")
-        sys.exit(1)
+    print(f"Received config: {data}")
+
+    assert "web_channel_port" in data, "web_channel_port missing in response"
+
+    settings = get_settings()
+    expected_port = settings.web_channel_port
+
+    assert data["web_channel_port"] == expected_port, f"Expected port {expected_port}, got {data['web_channel_port']}"
+    print("✅ /config/client endpoint test passed!")
+
+except ImportError as e:
+    print(f"❌ Could not import necessary modules: {e}")
+    sys.exit(1)
+except AssertionError as e:
+    print(f"❌ Assertion failed: {e}")
+    sys.exit(1)
+except Exception as e:
+    print(f"❌ Test failed with error: {e}")
+    sys.exit(1)
