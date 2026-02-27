@@ -2,6 +2,7 @@
 Base Channel Interface - Abstract class for all messaging channels
 """
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Callable, Any, Dict, List, Optional
 from cortex.events import EventBus, EventType
@@ -156,7 +157,3 @@ class Channel(ABC):
             "connected": self.is_connected,
             "handlers": len(self.message_handlers)
         }
-
-
-# Import asyncio for async operations
-import asyncio
