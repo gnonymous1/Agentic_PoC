@@ -137,11 +137,16 @@ class SimpleJSONMemory:
         
         # Ensure collection directory exists
         col_dir = os.path.join(os.path.dirname(self.path), collection)
-        os.makedirs(col_dir, exist_ok=True)
         
-        file_path = os.path.join(col_dir, f"{doc_id}.json")
-        with open(file_path, "w") as f:
-            json.dump(data, f, default=str, indent=2)
+        def _write():
+            os.makedirs(col_dir, exist_ok=True)
+            file_path = os.path.join(col_dir, f"{doc_id}.json")
+            with open(file_path, "w") as f:
+                json.dump(data, f, default=str, indent=2)
+
+        # Offload blocking I/O to a thread
+        import asyncio
+        await asyncio.to_thread(_write)
             
         return doc_id
 
