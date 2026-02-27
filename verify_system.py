@@ -1,8 +1,6 @@
-import os
-import sys
 from cortex.graph import graph
 from langchain_core.messages import HumanMessage
-from colorama import init, Fore, Style
+from colorama import init, Fore
 
 init(autoreset=True)
 
