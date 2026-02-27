@@ -1,10 +1,15 @@
 import pytest
 import os
 import sys
-import os
 
 # Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    from tests.utils import setup_project_root
+except ImportError:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from tests.utils import setup_project_root
+
+setup_project_root()
 
 from agent_fabric.tools import execute_python, vector_search, save_memory, memory_system
 from agent_fabric.architect_tools import list_files, read_file, write_file, create_new_tool
