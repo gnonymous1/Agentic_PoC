@@ -4,7 +4,13 @@ import os
 from unittest.mock import MagicMock, patch
 
 # Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    from tests.utils import setup_project_root
+except ImportError:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    from tests.utils import setup_project_root
+
+setup_project_root()
 
 from cortex.events import EventBus, EventType
 from cortex.registry import registry

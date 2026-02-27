@@ -7,7 +7,8 @@ import sys
 import os
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tests.utils import setup_project_root
+setup_project_root()
 
 from cortex.synthesis import (
     synthesize_task,
