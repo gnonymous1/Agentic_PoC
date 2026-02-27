@@ -23,12 +23,6 @@ def get_llm(role: str = "default", temperature: float = 0):
     
     api_key = settings.llm.api_key
     
-    # Optional base_url for OpenAI-compatible providers
-    base_url = None
-    if provider in ["ollama", "lm_studio", "openrouter"]:
-        # Logic to determine base_url could be added to Settings model if needed
-        pass
-
     print(f"Loading LLM: {model} (Role: {role})")
 
     if provider == "google":
