@@ -15,6 +15,7 @@ TEST_SCRIPTS = [
     "tests/test_marketplace_phase10.py",
     "tests/test_revenue_phase11.py",
     "tests/test_evolution_phase12.py",
+    "tests/test_cost_tracker.py",
 ]
 
 def run_all_tests():
