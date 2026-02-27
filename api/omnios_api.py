@@ -1,5 +1,6 @@
 import os
 import uvicorn
+import secrets
 from fastapi import FastAPI, HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +23,15 @@ app.add_middleware(
 
 # Security
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key")
-VALID_API_KEYS = {os.getenv("OMNIOS_API_KEY", "omnios-default-secure-key")}
+
+def get_valid_api_keys():
+    key = os.getenv("OMNIOS_API_KEY")
+    if not key:
+        key = secrets.token_urlsafe(32)
+        print(f"WARNING: OMNIOS_API_KEY not set. Generated temporary secure key: {key}")
+    return {key}
+
+VALID_API_KEYS = get_valid_api_keys()
 
 async def get_api_key(api_key: str = Security(API_KEY_HEADER)):
     if api_key not in VALID_API_KEYS:
@@ -57,7 +66,7 @@ async def process_request(req: RequestModel, api_key: str = Depends(get_api_key)
     
     # Check for custom provider keys in context to allow UI-driven experimentation
     custom_key = req.context.get("openai_api_key")
-    if custom_key and custom_key != "omnios-default-secure-key":
+    if custom_key:
         coordinator.llm.config["providers"]["openai"]["api_key"] = custom_key
 
     try:
