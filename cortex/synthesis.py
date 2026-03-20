@@ -321,17 +321,32 @@ class SelfReflection:
             "overall_score": 0.0
         }
         
-        # Count executed steps
-        executed_steps = sum(1 for log in execution_log if "Completed" in log or "executed" in log.lower())
-        total_steps = len([log for log in execution_log if "Step" in log])
+        executed_steps = 0
+        total_steps = 0
+        deviations = 0
+        errors = 0
+        
+        for log in execution_log:
+            log_lower = log.lower()
+
+            # Count executed steps
+            if "Completed" in log or "executed" in log_lower:
+                executed_steps += 1
+
+            # Count total steps
+            if "Step" in log:
+                total_steps += 1
+
+            # Count deviations
+            if "deviated" in log_lower or "changed" in log_lower:
+                deviations += 1
+
+            # Count errors
+            if "Error" in log or "failed" in log_lower:
+                errors += 1
+        
         accuracy["steps_executed"] = executed_steps / total_steps if total_steps > 0 else 0
-        
-        # Count deviations
-        deviations = sum(1 for log in execution_log if "deviated" in log.lower() or "changed" in log.lower())
         accuracy["deviations_occurred"] = min(1.0, deviations * 0.2)
-        
-        # Count errors
-        errors = sum(1 for log in execution_log if "Error" in log or "failed" in log.lower())
         accuracy["errors_encountered"] = min(1.0, errors * 0.3)
         
         # Calculate overall score
@@ -354,16 +369,23 @@ class SelfReflection:
             predicted_risks = plan["risk_assessment"].get("risk_factors", {})
             risk_assessment["predicted_risks"] = len(predicted_risks)
         
-        # Count actual risks encountered
-        actual_risks = sum(1 for log in execution_log if "risk" in log.lower() or "issue" in log.lower())
+        # Count actual risks and mitigations encountered
+        actual_risks = 0
+        mitigations = 0
+
+        for log in execution_log:
+            log_lower = log.lower()
+            if "risk" in log_lower or "issue" in log_lower:
+                actual_risks += 1
+            if "mitigation" in log_lower or "fix" in log_lower:
+                mitigations += 1
+
         risk_assessment["actual_risks_encountered"] = actual_risks
         
         # Calculate prediction accuracy
         if risk_assessment["predicted_risks"] > 0:
             risk_assessment["predicted_vs_actual_match"] = min(1.0, actual_risks / risk_assessment["predicted_risks"])
         
-        # Count applied mitigations
-        mitigations = sum(1 for log in execution_log if "mitigation" in log.lower() or "fix" in log.lower())
         risk_assessment["risk_mitigations_applied"] = mitigations
         
         # Calculate overall score
@@ -380,14 +402,24 @@ class SelfReflection:
             "resource_efficiency": 0.0
         }
         
-        # Estimate resource usage from logs (simplified)
-        time_logs = [log for log in execution_log if "time" in log.lower() or "duration" in log.lower()]
-        if time_logs:
-            utilization["execution_time"] = len(time_logs) * 0.1  # Simplified estimation
+        # Estimate resource usage and efficiency from logs (simplified)
+        time_log_count = 0
+        errors = 0
+        total_steps = 0
+
+        for log in execution_log:
+            log_lower = log.lower()
+            if "time" in log_lower or "duration" in log_lower:
+                time_log_count += 1
+            if "Error" in log:
+                errors += 1
+            if "Step" in log:
+                total_steps += 1
+
+        if time_log_count > 0:
+            utilization["execution_time"] = time_log_count * 0.1  # Simplified estimation
         
         # Resource efficiency based on errors
-        errors = sum(1 for log in execution_log if "Error" in log)
-        total_steps = len([log for log in execution_log if "Step" in log])
         if total_steps > 0:
             utilization["resource_efficiency"] = 1.0 - (errors / total_steps)
         
@@ -662,18 +694,29 @@ THINK STEP-BY-STEP. BE THOROUGH AND ANALYTICAL."""
         """Compare planned vs actual execution."""
         comparison = {
             "planned_steps": len(plan.get("subtasks", [])),
-            "executed_steps": len([log for log in execution_log if "Step" in log]),
+            "executed_steps": 0,
             "deviations": 0,
             "unplanned_steps": 0,
             "accuracy_score": 0.0
         }
         
-        # Count deviations and unplanned steps
+        executed_steps = 0
+        deviations = 0
+        unplanned_steps = 0
+
+        # Count executed steps, deviations and unplanned steps
         for log in execution_log:
-            if "deviated" in log.lower() or "changed" in log.lower():
-                comparison["deviations"] += 1
-            if "unplanned" in log.lower() or "additional" in log.lower():
-                comparison["unplanned_steps"] += 1
+            log_lower = log.lower()
+            if "Step" in log:
+                executed_steps += 1
+            if "deviated" in log_lower or "changed" in log_lower:
+                deviations += 1
+            if "unplanned" in log_lower or "additional" in log_lower:
+                unplanned_steps += 1
+
+        comparison["executed_steps"] = executed_steps
+        comparison["deviations"] = deviations
+        comparison["unplanned_steps"] = unplanned_steps
         
         # Calculate accuracy score
         if comparison["planned_steps"] > 0:
@@ -695,12 +738,18 @@ THINK STEP-BY-STEP. BE THOROUGH AND ANALYTICAL."""
         if plan.get("risk_assessment"):
             risk_management["predicted_risks"] = len(plan["risk_assessment"].get("risk_factors", {}))
         
-        # Count actual risks
-        actual_risks = sum(1 for log in execution_log if "risk" in log.lower() or "issue" in log.lower())
-        risk_management["actual_risks_encountered"] = actual_risks
+        # Count actual risks and mitigated risks
+        actual_risks = 0
+        mitigated = 0
         
-        # Count mitigated risks
-        mitigated = sum(1 for log in execution_log if "mitigation" in log.lower() or "resolved" in log.lower())
+        for log in execution_log:
+            log_lower = log.lower()
+            if "risk" in log_lower or "issue" in log_lower:
+                actual_risks += 1
+            if "mitigation" in log_lower or "resolved" in log_lower:
+                mitigated += 1
+
+        risk_management["actual_risks_encountered"] = actual_risks
         risk_management["mitigated_risks"] = mitigated
         
         # Calculate unmitigated risks
