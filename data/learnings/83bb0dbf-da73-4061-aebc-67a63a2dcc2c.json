@@ -1,9 +1,0 @@
-{
-  "type": "interaction_learning",
-  "task_type": "general",
-  "input": "delete that thing",
-  "response": "{'intent': 'idk maybe delete something', 'complexity': 'simple', 'approach': 'direct', 'confidence': 0.3}",
-  "feedback": null,
-  "timestamp": "2026-02-17T17:25:03.024822",
-  "id": "83bb0dbf-da73-4061-aebc-67a63a2dcc2c"
-}

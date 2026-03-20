@@ -498,6 +498,16 @@ async def get_memory():
     except Exception as e:
         return []
 
+@app.post("/memory/consolidate")
+@limiter.limit("5/minute")
+async def consolidate_memory_endpoint(request: Request):
+    """Triggers the memory consolidation 'Dream Layer'."""
+    try:
+        result = memory.consolidate()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 class WipeRequest(BaseModel):
     confirmation: str  # Must be "CONFIRM_WIPE"
 
@@ -668,7 +678,7 @@ Do not include markdown formatting (```json), just the raw JSON string.
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/scripts/execute")
-async def execute_script(request: ScriptExecuteRequest):
+async def execute_script(request: ScriptRequest):
     """Execute a script."""
     try:
         result = await script_executor.execute_script(request.script_name)
