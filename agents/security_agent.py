@@ -23,9 +23,9 @@ class SecurityAgent(BaseAgent):
     def scan_code(self, code: str) -> str:
         """Simulated static analysis scan."""
         # In a real impl, this would run bandit or sonarque
-        return f"Static analysis complete on {len(code)} bytes. No critical CVEs found (Simulated)."
-
-        return "Architecture review: Ensure TLS everywhere, use least privilege for agents."
+        report = f"Static analysis complete on {len(code)} bytes. No critical CVEs found (Simulated)."
+        report += "\nArchitecture review: Ensure TLS everywhere, use least privilege for agents."
+        return report
 
     def _register_sub_agents(self):
         """Register sub-agents (none for now)."""
