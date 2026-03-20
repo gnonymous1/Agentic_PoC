@@ -22,10 +22,20 @@ app.add_middleware(
 
 # Security
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key")
-VALID_API_KEYS = {os.getenv("OMNIOS_API_KEY", "omnios-default-secure-key")}
+
+def get_valid_api_keys():
+    key = os.getenv("OMNIOS_API_KEY")
+    if key:
+        return {key}
+    return set()
 
 async def get_api_key(api_key: str = Security(API_KEY_HEADER)):
-    if api_key not in VALID_API_KEYS:
+    valid_keys = get_valid_api_keys()
+    if not valid_keys:
+        # In a real system, you might want to allow initialization or log this.
+        # For now, if no key is set in ENV, all requests with a key will fail.
+        raise HTTPException(status_code=403, detail="API Key not configured on server")
+    if api_key not in valid_keys:
         raise HTTPException(status_code=403, detail="Invalid API Key")
     return api_key
 
@@ -57,7 +67,7 @@ async def process_request(req: RequestModel, api_key: str = Depends(get_api_key)
     
     # Check for custom provider keys in context to allow UI-driven experimentation
     custom_key = req.context.get("openai_api_key")
-    if custom_key and custom_key != "omnios-default-secure-key":
+    if custom_key:
         coordinator.llm.config["providers"]["openai"]["api_key"] = custom_key
 
     try:

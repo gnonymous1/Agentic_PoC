@@ -1,5 +1,5 @@
-const API_URL = "http://localhost:8000";
-const API_KEY = "omnios-default-secure-key";
+const API_URL = window.location.origin;
+const API_KEY = "";
 
 const messageContainer = document.getElementById("message-container");
 const userInput = document.getElementById("user-input");
@@ -21,7 +21,7 @@ const activityPanel = document.querySelector(".activity-panel");
 // Settings values (local state)
 let currentApiUrl = API_URL;
 let currentApiKey = API_KEY;
-let openaiApiKey = "omnios-default-secure-key"; // Default
+let openaiApiKey = ""; // Default
 
 let lightningMode = false;
 
