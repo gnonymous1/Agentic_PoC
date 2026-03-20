@@ -159,18 +159,20 @@ class AuthService:
             user_id: str = payload.get("user_id")
             username: str = payload.get("username")
             role: str = payload.get("role")
-            exp: datetime = datetime.fromtimestamp(payload.get("exp"))
+            exp_timestamp = payload.get("exp")
             
-            if user_id is None or username is None:
+            if user_id is None or username is None or role is None or exp_timestamp is None:
                 return None
             
+            exp: datetime = datetime.fromtimestamp(exp_timestamp)
+
             return TokenData(
                 user_id=user_id,
                 username=username,
                 role=UserRole(role),
                 exp=exp
             )
-        except JWTError:
+        except (JWTError, ValueError, TypeError):
             return None
     
     def authenticate_user(self, db: Session, username: str, password: str) -> Optional[UserModel]:
