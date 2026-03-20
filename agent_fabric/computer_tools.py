@@ -3,6 +3,7 @@ import pygetwindow as gw
 import time
 import os
 import subprocess
+import shlex
 import winreg
 from langchain_core.tools import tool
 from typing import Annotated, List, Optional
@@ -218,9 +219,18 @@ def system_shell_exec(command: str, use_powershell: bool = True) -> str:
 
 @tool
 def computer_open_app(command: Annotated[str, "Command to run (e.g. 'notepad', 'calc')"]) -> str:
-    """Opens an application by running a command."""
+    """Opens an application by running a command safely."""
     try:
-        subprocess.Popen(command, shell=True)
+        # Use shlex to split the command for shell-less execution
+        # Set posix=False on Windows to preserve Windows-style quoting
+        is_windows = os.name == 'nt'
+        args = shlex.split(command, posix=not is_windows)
+
+        if is_windows:
+            # On Windows, shlex.split might keep outer quotes in non-POSIX mode
+            args = [arg.strip('"') for arg in args]
+
+        subprocess.Popen(args, shell=False)
         return f"Launched: {command}"
     except Exception as e:
         return f"Error launching app: {e}"
