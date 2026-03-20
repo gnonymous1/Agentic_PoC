@@ -8,13 +8,16 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from core.coordinator import CoordinatorAgent
 from agents.dynamic_tool_agent import DynamicToolAgent
+from config.settings import get_settings
+
+settings = get_settings()
 
 app = FastAPI(title="OMNIOS API", description="Secure Agentic Interface")
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.security.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

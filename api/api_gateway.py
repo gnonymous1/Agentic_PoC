@@ -12,12 +12,15 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from cortex.events import EventBus, EventType
+from config.settings import get_settings
+
+settings = get_settings()
 
 app = FastAPI(title="AgentOS API Gateway", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.security.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
