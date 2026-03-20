@@ -498,6 +498,17 @@ async def get_memory():
     except Exception as e:
         return []
 
+@app.post("/memory/consolidate")
+@limiter.limit("10/minute")
+async def consolidate_memory_endpoint(request: Request):
+    """Triggers memory consolidation (Dream Layer)."""
+    try:
+        result = memory.consolidate()
+        return result
+    except Exception as e:
+        logger.error(f"Memory consolidation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 class WipeRequest(BaseModel):
     confirmation: str  # Must be "CONFIRM_WIPE"
 
@@ -564,7 +575,7 @@ async def list_scripts():
     """List all available scripts."""
     return {"scripts": script_executor.list_scripts()}
 
-class ScriptRequest(BaseModel):
+class ScriptExecuteRequest(BaseModel):
     script_name: str
 
 class WorkflowStep(BaseModel):

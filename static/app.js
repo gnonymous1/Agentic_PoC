@@ -873,8 +873,32 @@ function displayMemoryResults(results) {
 
 async function consolidateMemory() {
     addMessage("Consolidating memories...", 'system');
-    // TODO: Call consolidation endpoint
-    console.log("Consolidate memory");
+    try {
+        const response = await fetch(`${API_BASE}/memory/consolidate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+            addMessage(`Consolidation Complete: ${data.result.summary}`, 'system');
+            if (data.result.insights) {
+                addMessage(`New Insights: ${data.result.insights.join(', ')}`, 'ai');
+            }
+        } else {
+            addMessage(`Consolidation Status: ${data.status || 'No new memories to consolidate'}`, 'system');
+        }
+
+        fetchMemory(); // Refresh memory list
+    } catch (e) {
+        console.error("Consolidation failed:", e);
+        addMessage(`Consolidation failed: ${e.message}`, 'system');
+    }
 }
 
 
