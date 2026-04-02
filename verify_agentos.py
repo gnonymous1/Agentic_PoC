@@ -7,7 +7,6 @@ sys.path.append(os.getcwd())
 
 from cortex.graph import graph
 from langchain_core.messages import HumanMessage
-import time
 
 def test_agent_os():
     print("--- Testing AgentOS ---")
