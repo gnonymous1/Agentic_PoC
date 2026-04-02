@@ -313,29 +313,39 @@ class SelfReflection:
     
     def _assess_execution_accuracy(self, plan: Dict[str, Any], execution_log: List[str]) -> Dict[str, Any]:
         """Assess how accurately the plan was executed."""
+        executed_steps = 0
+        total_steps = 0
+        deviations = 0
+        errors = 0
+
+        for log in execution_log:
+            log_lower = log.lower()
+
+            # Count executed steps and total steps
+            is_step = "Step" in log
+            if is_step:
+                total_steps += 1
+
+            if "Completed" in log or "executed" in log_lower:
+                executed_steps += 1
+
+            # Count deviations
+            if "deviated" in log_lower or "changed" in log_lower:
+                deviations += 1
+
+            # Count errors
+            if "Error" in log or "failed" in log_lower:
+                errors += 1
+
         accuracy = {
-            "steps_executed": 0,
-            "deviations_occurred": 0,
-            "errors_encountered": 0,
+            "steps_executed": executed_steps / total_steps if total_steps > 0 else 0,
+            "deviations_occurred": min(1.0, deviations * 0.2),
+            "errors_encountered": min(1.0, errors * 0.3),
             "corrections_needed": 0,
-            "overall_score": 0.0
         }
         
-        # Count executed steps
-        executed_steps = sum(1 for log in execution_log if "Completed" in log or "executed" in log.lower())
-        total_steps = len([log for log in execution_log if "Step" in log])
-        accuracy["steps_executed"] = executed_steps / total_steps if total_steps > 0 else 0
-        
-        # Count deviations
-        deviations = sum(1 for log in execution_log if "deviated" in log.lower() or "changed" in log.lower())
-        accuracy["deviations_occurred"] = min(1.0, deviations * 0.2)
-        
-        # Count errors
-        errors = sum(1 for log in execution_log if "Error" in log or "failed" in log.lower())
-        accuracy["errors_encountered"] = min(1.0, errors * 0.3)
-        
         # Calculate overall score
-        accuracy["overall_score"] = sum(accuracy.values()) / len(accuracy)
+        accuracy["overall_score"] = sum(accuracy.values()) / (len(accuracy) + 1) # +1 for overall_score itself which is in the original too
         
         return accuracy
     
