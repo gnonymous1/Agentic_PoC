@@ -1,8 +1,9 @@
 # Optional dependencies for advanced/local integrations.
 # Install with: pip install -r requirements.txt -r requirements-optional.txt
+# This list is kept compatible with the pinned baseline requirements.
 
-# Provider-specific LLM backends
-langchain-groq==0.1.3
+# Provider-specific LLM backend compatible with langchain==0.1.x pins
+langchain-groq==0.0.1
 
 # Identity file auto-reload support
 watchdog==4.0.0
@@ -10,8 +11,8 @@ watchdog==4.0.0
 # Dynamic web scraping helper tools
 beautifulsoup4==4.12.3
 
-# Browser automation tools
-playwright==1.43.0
+# Browser automation tools (newer pin avoids greenlet conflicts with locust/gevent)
+playwright==1.58.0
 
 # Desktop/OS operator tools (best on Windows with GUI access)
 pyautogui==0.9.54
@@ -20,7 +21,8 @@ pygetwindow==0.0.9
 # Voice input/output tools
 SpeechRecognition==3.10.4
 pyttsx3==2.90
-gTTS==2.5.1
+# gTTS is intentionally excluded because it requires click<8.2, which conflicts
+# with the typer/chromadb dependency stack in requirements.txt.
 
-# Local embedding fallback model
-sentence-transformers==2.7.0
+# Local embedding fallback model is isolated in requirements-optional-ml.txt
+# to avoid unexpectedly pulling multi-GB torch/cuda wheels in baseline setups.
