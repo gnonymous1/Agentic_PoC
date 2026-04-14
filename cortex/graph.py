@@ -17,21 +17,81 @@ from utils.logger import setup_logging
 
 logger = setup_logging()
 
-from agent_fabric.advanced_browser import open_url, read_page, smart_click, type_text, scroll_page, close_browser, browser_screenshot
-from agent_fabric.computer_tools import (
-    computer_screenshot, computer_list_windows, computer_focus_window,
-    computer_mouse_move, computer_mouse_click, computer_keyboard_type,
-    computer_keyboard_hotkey, computer_open_app,
-    # Administrative Tools
-    system_get_registry, system_set_registry, system_manage_env, system_shell_exec,
-    # Ultimate System Control Tools
-    system_service_control, system_process_control, system_file_operations,
-    system_network_config, system_user_management, system_scheduled_tasks,
-    system_disk_operations, system_power_control,
-    # New Ultimate Controls
-    system_get_clipboard, system_set_clipboard, system_get_volume,
-    system_set_volume, system_get_display_info
-)
+surfer_tools = []
+try:
+    from agent_fabric.advanced_browser import (
+        open_url,
+        read_page,
+        smart_click,
+        type_text,
+        scroll_page,
+        close_browser,
+        browser_screenshot,
+    )
+
+    surfer_tools = [open_url, read_page, smart_click, type_text, scroll_page, close_browser, browser_screenshot]
+except Exception as exc:
+    logger.warning(f"[Graph] Advanced browser tools unavailable: {exc}")
+
+operator_tools = []
+try:
+    from agent_fabric.computer_tools import (
+        computer_screenshot,
+        computer_list_windows,
+        computer_focus_window,
+        computer_mouse_move,
+        computer_mouse_click,
+        computer_keyboard_type,
+        computer_keyboard_hotkey,
+        computer_open_app,
+        system_get_registry,
+        system_set_registry,
+        system_manage_env,
+        system_shell_exec,
+        system_service_control,
+        system_process_control,
+        system_file_operations,
+        system_network_config,
+        system_user_management,
+        system_scheduled_tasks,
+        system_disk_operations,
+        system_power_control,
+        system_get_clipboard,
+        system_set_clipboard,
+        system_get_volume,
+        system_set_volume,
+        system_get_display_info,
+    )
+
+    operator_tools = [
+        computer_screenshot,
+        computer_list_windows,
+        computer_focus_window,
+        computer_mouse_move,
+        computer_mouse_click,
+        computer_keyboard_type,
+        computer_keyboard_hotkey,
+        computer_open_app,
+        system_get_registry,
+        system_set_registry,
+        system_manage_env,
+        system_shell_exec,
+        system_service_control,
+        system_process_control,
+        system_file_operations,
+        system_network_config,
+        system_user_management,
+        system_scheduled_tasks,
+        system_disk_operations,
+        system_power_control,
+        system_get_clipboard,
+        system_set_clipboard,
+        system_get_volume,
+        system_set_volume,
+        system_get_display_info,
+    ]
+except Exception as exc:
+    logger.warning(f"[Graph] Computer control tools unavailable: {exc}")
 
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import SystemMessage
@@ -77,7 +137,7 @@ surfer = BaseAgent(
                   "5. 'scroll_page' if needed. "
                   "Your goal is to complete the user's web-based objective.",
     role="execution",
-    tools=[open_url, read_page, smart_click, type_text, scroll_page, close_browser, browser_screenshot]
+    tools=surfer_tools
 )
 
 operator = BaseAgent(
@@ -96,21 +156,7 @@ operator = BaseAgent(
                   "- Power Control: Shutdown, restart, sleep, hibernate "
                   "SAFETY PROTOCOL: Always screenshot before destructive actions. Use 1-second safety delays.",
     role="execution",
-    tools=[
-        # Computer Control
-        computer_screenshot, computer_list_windows, computer_focus_window,
-        computer_mouse_move, computer_mouse_click, computer_keyboard_type,
-        computer_keyboard_hotkey, computer_open_app,
-        # Administrative Tools
-        system_get_registry, system_set_registry, system_manage_env, system_shell_exec,
-        # Ultimate System Control
-        system_service_control, system_process_control, system_file_operations,
-        system_network_config, system_user_management, system_scheduled_tasks,
-        system_disk_operations, system_power_control,
-        # Ultimate Enhanced Control
-        system_get_clipboard, system_set_clipboard, system_get_volume,
-        system_set_volume, system_get_display_info
-    ]
+    tools=operator_tools
 )
 
 chat_agent = BaseAgent(
@@ -156,23 +202,18 @@ When you need to create a new capability, route to yourself or use create_new_to
 """,
     role="antigravity",
     tools=[
-        # Core development tools
-        list_files, read_file, write_file, create_new_tool,
-        execute_python, multiply,
-        # Memory and research
-        vector_search, save_memory, consolidate_memory,
-        # System management
-        install_package, restart_system,
-        # Advanced capabilities (if needed)
-        open_url, read_page, smart_click, type_text, scroll_page, close_browser,
-        computer_screenshot, computer_list_windows, computer_focus_window,
-        computer_mouse_move, computer_mouse_click, computer_keyboard_type,
-        computer_keyboard_hotkey, computer_open_app,
-        system_get_registry, system_set_registry, system_manage_env, system_shell_exec,
-        system_service_control, system_process_control, system_file_operations,
-        system_network_config, system_user_management, system_scheduled_tasks,
-        system_disk_operations, system_power_control
-    ] + dynamic_tools
+        list_files,
+        read_file,
+        write_file,
+        create_new_tool,
+        execute_python,
+        multiply,
+        vector_search,
+        save_memory,
+        consolidate_memory,
+        install_package,
+        restart_system,
+    ] + surfer_tools + operator_tools + dynamic_tools
 )
 
 security = SecurityAgent(name="Security")

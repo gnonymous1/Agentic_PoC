@@ -6,9 +6,14 @@ Loads and injects SOUL.md, IDENTITY.md, MEMORY.md, HEARTBEAT.md into prompts
 import os
 from pathlib import Path
 from typing import Dict, Optional
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 from utils.logger import setup_logging
+
+try:
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+except ImportError:
+    Observer = None
+    FileSystemEventHandler = object
 
 logger = setup_logging()
 
@@ -100,6 +105,10 @@ class IdentityLoader:
     
     def start_watching(self):
         """Start file watcher for auto-reload (optional)"""
+        if Observer is None:
+            logger.warning("[Identity] watchdog is not installed. Skipping file watcher startup.")
+            return
+
         if self._watcher is not None:
             return
         

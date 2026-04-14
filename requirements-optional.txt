@@ -1,0 +1,26 @@
+# Optional dependencies for advanced/local integrations.
+# Install with: pip install -r requirements.txt -r requirements-optional.txt
+
+# Provider-specific LLM backends
+langchain-groq==0.1.3
+
+# Identity file auto-reload support
+watchdog==4.0.0
+
+# Dynamic web scraping helper tools
+beautifulsoup4==4.12.3
+
+# Browser automation tools
+playwright==1.43.0
+
+# Desktop/OS operator tools (best on Windows with GUI access)
+pyautogui==0.9.54
+pygetwindow==0.0.9
+
+# Voice input/output tools
+SpeechRecognition==3.10.4
+pyttsx3==2.90
+gTTS==2.5.1
+
+# Local embedding fallback model
+sentence-transformers==2.7.0
