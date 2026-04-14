@@ -1,7 +1,11 @@
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
 from config.settings import get_settings
+
+try:
+    from langchain_groq import ChatGroq
+except ImportError:
+    ChatGroq = None
 
 RECOMMENDED_MODELS = {
     "arcee-ai/trinity-large-preview:free": "Arcee AI: Trinity Large Preview (466B) - High context, agentic",
@@ -39,6 +43,9 @@ def get_llm(role: str = "default", temperature: float = 0):
         )
     
     elif provider == "groq":
+        if ChatGroq is None:
+            raise ImportError("Groq provider selected but langchain-groq is not installed. Install requirements-optional.txt.")
+
         return ChatGroq(
             model_name=model,
             temperature=temperature,
