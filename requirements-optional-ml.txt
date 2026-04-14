@@ -1,0 +1,5 @@
+# Heavy local-ML optional dependencies.
+# Install only when you explicitly need local embedding fallback models.
+# These packages can download multi-GB torch/cuda wheels on Linux.
+
+sentence-transformers==2.7.0

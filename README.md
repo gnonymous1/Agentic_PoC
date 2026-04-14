@@ -13,30 +13,38 @@ The system is built on the "Neuro-Symbolic Agentic Mesh" architecture:
 ## Setup
 
 1. Clone repository.
-2. Create/activate a virtual environment.
-3. Install baseline dependencies:
+2. Create/activate a virtual environment (Python 3.11 preferred).
+3. Upgrade packaging tools:
+   ```bash
+   python -m pip install --upgrade pip setuptools "wheel<0.46"
+   ```
+4. Install baseline dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. (Optional) Install advanced integrations (browser automation, voice, desktop control, Groq provider, local embeddings):
+5. (Optional) Install advanced integrations (browser automation, desktop control, Groq provider):
    ```bash
    pip install -r requirements-optional.txt
    ```
-5. Set up environment variables in `.env`.
-6. Run the system: `python main.py`
+6. (Optional, heavy) Install local embedding fallback dependencies:
+   ```bash
+   pip install -r requirements-optional-ml.txt
+   ```
+7. Set up environment variables in `.env`.
+8. Run the system: `python main.py`
 
 ## Baseline test workflow
 
 This repository includes a stable baseline test suite (fast, no external services):
 
 ```bash
-pytest
+python -m pytest
 ```
 
 To run the broader legacy/integration test set explicitly:
 
 ```bash
-pytest tests
+python -m pytest tests
 ```
 
 To bootstrap a local environment and run tests in one command:
@@ -49,6 +57,12 @@ If you want optional integrations installed during bootstrap:
 
 ```bash
 INSTALL_OPTIONAL=1 ./scripts/bootstrap_test_env.sh
+```
+
+If you also want heavy local-ML dependencies installed during bootstrap:
+
+```bash
+INSTALL_OPTIONAL=1 INSTALL_OPTIONAL_ML=1 ./scripts/bootstrap_test_env.sh
 ```
 
 ## Directory Structure
