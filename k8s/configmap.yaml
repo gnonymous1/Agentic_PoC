@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gnone-config
+  namespace: gnone
+data:
+  ENVIRONMENT: "production"
+  DATABASE_URL: "postgresql://gnone:$(DB_PASSWORD)@gnone-postgres:5432/gnone"
+  REDIS_URL: "redis://gnone-redis:6379/0"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://gnone-otel-collector:4318/v1/traces"
+  OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gnone-models
+  namespace: gnone
+data:
+  GEMINI_MODEL: "gemini-3.1-flash-lite"
+  GENERATOR_MODEL: "deepseek/deepseek-v4-flash:free"
+  GENERATOR_FALLBACK_MODEL: "nousresearch/hermes-3-llama-3.1-405b:free"
+  GENERATOR_FALLBACK_MODEL_2: "poolside/laguna-m.1:free"
+  GENERATOR_FALLBACK_MODEL_3: "baidu/cobuddy:free"
+  CRITIC_MODEL: "nvidia/nemotron-3-super-120b-a12b:free"

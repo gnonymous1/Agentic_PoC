@@ -1,0 +1,53 @@
+[project]
+name = "gnone"
+version = "1.0.0"
+description = "Sovereign Executive Proxy Engine — Multi-agent content manufacturing and meeting orchestration platform"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.28.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "cryptography>=44.0.0",
+    "prometheus-client>=0.21.0",
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5.0",
+    "ruff>=0.7.0",
+    "mypy>=1.12.0",
+    "pre-commit>=4.0",
+]
+db = ["asyncpg>=0.30", "pgvector>=0.3"]
+redis = ["redis[hiredis]>=5.2"]
+livekit = ["livekit>=0.18", "livekit-api>=0.18"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Tests that take more than 10 seconds",
+]

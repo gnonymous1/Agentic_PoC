@@ -1,0 +1,1 @@
+"""GNONE Core Module."""

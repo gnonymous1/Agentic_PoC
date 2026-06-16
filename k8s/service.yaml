@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnone-api
+  namespace: gnone
+  labels:
+    app: gnone-api
+spec:
+  selector:
+    app: gnone-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnone-api-lb
+  namespace: gnone
+spec:
+  selector:
+    app: gnone-api
+  ports:
+    - name: http
+      port: 443
+      targetPort: 8000
+      protocol: TCP
+  type: LoadBalancer

@@ -1,0 +1,75 @@
+name: GNONE CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: gnone/gnone-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Apply database migrations
+        run: |
+          kubectl run gnone-migrate-${GITHUB_SHA::7} \
+            --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+            --restart=Never \
+            --command -- /app/migrate.sh
+          kubectl wait --for=condition=complete \
+            job/gnone-migrate-${GITHUB_SHA::7} --timeout=120s
+          kubectl delete job gnone-migrate-${GITHUB_SHA::7}
+
+      - name: Deploy to Kubernetes
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p $HOME/.kube
+          echo "$KUBE_CONFIG" > $HOME/.kube/config
+          kubectl set image deployment/gnone-api \
+            api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} \
+            -n gnone
+
+      - name: Smoke test
+        run: |
+          sleep 10
+          kubectl run smoke-test --image=curlimages/curl --restart=Never -- \
+            curl -f http://gnone-api.gnone.svc.cluster.local:8000/api/v1/admin/health
+          kubectl wait --for=condition=complete job/smoke-test --timeout=30s
+          kubectl delete job smoke-test

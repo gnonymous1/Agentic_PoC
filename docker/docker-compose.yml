@@ -1,0 +1,335 @@
+version: "3.9"
+
+x-common-labels: &common-labels
+  com.gnone.project: "gnone"
+  com.gnone.environment: "${ENVIRONMENT:-production}"
+
+x-common-restart: &common-restart
+  restart: unless-stopped
+
+x-common-logging: &common-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+networks:
+  gnone-frontend:
+    driver: bridge
+    labels:
+      <<: *common-labels
+  gnone-backend:
+    driver: bridge
+    internal: true
+    labels:
+      <<: *common-labels
+  gnone-monitoring:
+    driver: bridge
+    internal: true
+    labels:
+      <<: *common-labels
+
+volumes:
+  pgdata:
+    driver: local
+    labels:
+      <<: *common-labels
+  redisdata:
+    driver: local
+    labels:
+      <<: *common-labels
+  promdata:
+    driver: local
+    labels:
+      <<: *common-labels
+  grafanadata:
+    driver: local
+    labels:
+      <<: *common-labels
+  chromadata:
+    driver: local
+    labels:
+      <<: *common-labels
+
+services:
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: gnone-nginx
+    <<: [*common-restart, *common-logging]
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - gnone-frontend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    labels:
+      <<: *common-labels
+
+  # ── API (Multi-Stage Build) ─────────────────────────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
+    container_name: gnone-api
+    <<: [*common-restart, *common-logging]
+    expose:
+      - "8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-gnone}:${POSTGRES_PASSWORD:-gnone}@postgres:5432/${POSTGRES_DB:-gnone}
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318/v1/traces
+      - CHROMA_PERSIST_DIR=/data/chroma
+    volumes:
+      - chromadata:/data/chroma
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gnone-backend
+      - gnone-frontend
+      - gnone-monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/admin/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    labels:
+      <<: *common-labels
+
+  # ── PostgreSQL with pgvector ────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: gnone-postgres
+    <<: [*common-restart, *common-logging]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gnone}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gnone}
+      POSTGRES_DB: ${POSTGRES_DB:-gnone}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_EXPOSE_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../migrations:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=768MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=4
+      -c max_parallel_workers_per_gather=2
+      -c max_parallel_workers=4
+      -c max_parallel_maintenance_workers=2
+    networks:
+      - gnone-backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gnone} -d ${POSTGRES_DB:-gnone}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    labels:
+      <<: *common-labels
+
+  # ── Redis with Persistence ──────────────────────────────────────────────
+  redis:
+    image: redis:7.4-alpine
+    container_name: gnone-redis
+    <<: [*common-restart, *common-logging]
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+      --save 300 100
+      --save 900 1
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-gnone_redis_secret}
+    ports:
+      - "${REDIS_EXPOSE_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - gnone-backend
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-gnone_redis_secret} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    labels:
+      <<: *common-labels
+
+  # ── OpenTelemetry Collector ─────────────────────────────────────────────
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.116.0
+    container_name: gnone-otel-collector
+    <<: [*common-restart, *common-logging]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+      - "8889:8889"
+    volumes:
+      - ./otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - gnone-monitoring
+      - gnone-backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:13133/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    labels:
+      <<: *common-labels
+
+  # ── Prometheus ──────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: gnone-prometheus
+    <<: [*common-restart, *common-logging]
+    ports:
+      - "${PROMETHEUS_EXPOSE_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.size=5GB"
+      - "--web.enable-lifecycle"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+    networks:
+      - gnone-monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    labels:
+      <<: *common-labels
+
+  # ── Grafana with Pre-loaded GNONE Dashboard ─────────────────────────────
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: gnone-grafana
+    <<: [*common-restart, *common-logging]
+    ports:
+      - "${GRAFANA_EXPOSE_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-gnone}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3000}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/gnone-overview.json
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - gnone-monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    labels:
+      <<: *common-labels
